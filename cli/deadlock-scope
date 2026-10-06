@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# DeadlockScope CLI Runner
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+LIB_PATH="${SCRIPT_DIR}/libdeadlockscope.so"
+
+export DEADLOCKSCOPE_POLL_MS=50
+export DEADLOCKSCOPE_CONFIRM_MS=100
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --stress)
+      if [[ -n "$2" && "$2" =~ ^[0-9]+$ ]]; then
+        export DEADLOCKSCOPE_STRESS="$2"
+        shift 2
+      else
+        export DEADLOCKSCOPE_STRESS=5
+        shift
+      fi
+      ;;
+    --filters)
+      export DEADLOCKSCOPE_FILTERS="$2"
+      shift 2
+      ;;
+    --poll)
+      export DEADLOCKSCOPE_POLL_MS="$2"
+      shift 2
+      ;;
+    --confirm)
+      export DEADLOCKSCOPE_CONFIRM_MS="$2"
+      shift 2
+      ;;
+    --debug)
+      export DEADLOCKSCOPE_DEBUG=1
+      shift
+      ;;
+    --dot)
+      export DEADLOCKSCOPE_DOT="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [[ ! -f "$LIB_PATH" ]]; then
+  echo "Error: libdeadlockscope.so not found at $LIB_PATH. Please build first." >&2
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: deadlock-scope [--stress [ms]] [--filters thread,gate,lifecycle] [--dot out.dot] [--debug] -- <program> [args...]"
+  exit 1
+fi
+
+export LD_PRELOAD="$LIB_PATH"
+exec "$@"

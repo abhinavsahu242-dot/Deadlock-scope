@@ -1,0 +1,21 @@
+digraph DeadlockScope {
+  compound=true;
+  rankdir=LR;
+  fontname="Helvetica";
+
+  subgraph cluster_lock_order {
+    label="Lock-Order Dependency Graph (Acquisitions)";
+    style=dashed;
+    color=darkblue;
+    node [shape=box, style=filled, fillcolor=lightblue, fontname="Helvetica"];
+    "L_0x57f2db962040" -> "L_0x57f2db962080" [color="orange", penwidth=2, label="seen"];
+    "L_0x57f2db962080" -> "L_0x57f2db962040" [color="orange", penwidth=2, label="seen"];
+  }
+
+  subgraph cluster_wait_for {
+    label="Live Wait-For Graph (Threads)";
+    style=dashed;
+    color=crimson;
+    node [shape=ellipse, style=filled, fillcolor=lightpink, fontname="Helvetica"];
+  }
+}

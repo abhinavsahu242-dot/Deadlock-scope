@@ -1,0 +1,8 @@
+digraph DeadlockScope {
+  rankdir=LR;
+  node [shape=box, style=filled, fillcolor=lightblue, fontname="Helvetica"];
+  edge [fontname="Helvetica"];
+
+  "0x5a83c7cb3040" -> "0x5a83c7cb3080" [color="orange", penwidth=2, label="seen"];
+  "0x5a83c7cb3080" -> "0x5a83c7cb3040" [color="orange", penwidth=2, label="seen"];
+}
