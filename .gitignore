@@ -1,0 +1,6 @@
+*.so
+tests/bin/*
+tests/bin_tsan/*
+*.o
+src/*.o
+*.dot
