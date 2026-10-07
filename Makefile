@@ -22,7 +22,7 @@ tests: $(TARGET) $(TEST_BINS)
 
 tests/bin/%: tests/%.c
 	@mkdir -p tests/bin
-	$(CC) -Wall -Wextra -pthread -g -O0 -o $@ $<
+	$(CC) -Wall -Wextra -pthread -rdynamic -g -O0 -o $@ $<
 
 clean:
 	rm -f src/*.o $(TARGET) tests/bin/*

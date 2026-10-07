@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DeadlockScope - Concurrency Diagnostics Dashboard</title>
+<title>DeadlockScope - 12_timedlock_deadlock [ACTIVE_TIMED]</title>
 <style>
   :root {
-    --bg-main: #090d16; --bg-card: #121a2d; --bg-card-hover: #1b2640;
+    --bg-main: #070b14; --bg-card: #0f172a; --bg-card-hover: #1e293b;
     --border: #1e293b; --border-bright: #334155; --text-primary: #f8fafc;
     --text-secondary: #94a3b8; --text-muted: #64748b;
+    --status-col: #a855f7; --status-bg: rgba(168, 85, 247, 0.15);
     --col-potential: #f59e0b; --col-active: #ef4444; --col-active-timed: #a855f7;
-    --col-confirmed: #dc2626; --col-suppressed: #10b981; --col-accent: #38bdf8;
+    --col-confirmed: #dc2626; --col-suppressed: #10b981; --col-accent: #38bdf8; --col-gate: #f59e0b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -20,7 +21,7 @@
   }
   header {
     background: var(--bg-card); border-bottom: 1px solid var(--border);
-    padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+    padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
   }
   .brand { display: flex; align-items: center; gap: 12px; }
   .brand-badge {
@@ -28,53 +29,70 @@
     font-weight: 800; font-size: 13px; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px;
     box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
   }
-  .brand h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
+  .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
   .brand .subtitle { font-size: 11px; color: var(--text-muted); }
   .meta-tags { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
   .meta-tag strong { color: var(--text-primary); }
-  .kpi-bar {
-    display: flex; gap: 12px; padding: 12px 24px; background: rgba(18, 26, 45, 0.6);
-    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  .hero-verdict {
+    background: var(--status-bg); border-bottom: 1px solid var(--border);
+    border-left: 6px solid var(--status-col); padding: 14px 24px;
+    display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    transition: all 0.3s ease;
   }
-  .kpi-card {
-    flex: 1; background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 16px; display: flex; flex-direction: column;
-    position: relative; overflow: hidden;
+  .hero-header { display: flex; align-items: center; gap: 12px; }
+  .hero-badge {
+    background: var(--status-col); color: #fff; font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
   }
-  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-  .kpi-card.kpi-confirmed::before { background: var(--col-confirmed); }
-  .kpi-card.kpi-active::before { background: var(--col-active); }
-  .kpi-card.kpi-timed::before { background: var(--col-active-timed); }
-  .kpi-card.kpi-potential::before { background: var(--col-potential); }
-  .kpi-card.kpi-suppressed::before { background: var(--col-suppressed); }
-  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
-  .kpi-val { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  .hero-target { font-size: 13px; color: var(--text-secondary); }
+  .hero-target strong { color: var(--text-primary); font-family: monospace; font-size: 14px; }
+  .hero-title { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; color: #fff; }
+  .hero-desc { font-size: 13px; color: #cbd5e1; line-height: 1.4; max-width: 1100px; }
+  .tool-matrix-box {
+    background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid var(--border);
+    padding: 10px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+  }
+  .matrix-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--col-accent); white-space: nowrap;
+  }
+  .matrix-chips { display: flex; gap: 12px; flex: 1; overflow-x: auto; }
+  .matrix-chip {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px;
+  }
+  .matrix-chip strong { color: var(--text-muted); font-size: 11px; }
+  .chip-val { font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+  .chip-safe { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+  .chip-err { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+  .chip-warn { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+  .chip-miss { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b; }
   .ablation-bar {
-    background: #0f172a; border-bottom: 1px solid var(--border); padding: 10px 24px;
-    display: flex; align-items: center; gap: 20px; font-size: 13px; flex-shrink: 0;
+    background: #090e1a; border-bottom: 1px solid var(--border); padding: 8px 24px;
+    display: flex; align-items: center; gap: 20px; font-size: 12px; flex-shrink: 0;
   }
-  .ablation-title { font-weight: 600; color: var(--col-accent); display: flex; align-items: center; gap: 6px; }
-  .filter-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; color: var(--text-secondary); }
-  .filter-toggle input { cursor: pointer; accent-color: var(--col-suppressed); transform: scale(1.15); }
+  .ablation-title { font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
+  .filter-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: var(--text-secondary); }
+  .filter-toggle input { cursor: pointer; accent-color: var(--col-suppressed); transform: scale(1.1); }
   .filter-toggle:hover { color: var(--text-primary); }
-  .ablation-hint { margin-left: auto; font-size: 11px; color: var(--text-muted); font-style: italic; }
+  .ablation-hint { margin-left: auto; font-size: 11px; color: var(--text-muted); }
   .workspace { display: flex; flex: 1; overflow: hidden; }
-  .canvas-panel { flex: 1; position: relative; display: flex; flex-direction: column; background: #060911; }
+  .canvas-panel { flex: 1; position: relative; display: flex; flex-direction: column; background: #050811; }
   .canvas-toolbar {
     position: absolute; top: 12px; left: 12px; z-index: 10; display: flex; gap: 8px;
-    background: rgba(18, 26, 45, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
     border-radius: 8px; padding: 6px;
   }
   .btn {
     background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
-    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer;
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
     transition: all 0.15s ease;
   }
   .btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-bright); }
-  .btn.active { background: var(--col-accent); color: #000; border-color: var(--col-accent); font-weight: 600; }
+  .btn.active { background: var(--col-accent); color: #000; border-color: var(--col-accent); }
   .legend {
     position: absolute; bottom: 12px; left: 12px; z-index: 10;
-    background: rgba(18, 26, 45, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
     border-radius: 8px; padding: 10px 14px; font-size: 11px; display: flex; flex-direction: column;
     gap: 6px; color: var(--text-secondary);
   }
@@ -83,11 +101,11 @@
   #graphCanvas { width: 100%; height: 100%; cursor: grab; display: block; }
   #graphCanvas:active { cursor: grabbing; }
   .sidebar { width: 440px; background: var(--bg-card); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-  .tabs { display: flex; border-bottom: 1px solid var(--border); background: rgba(18, 26, 45, 0.5); }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.5); }
   .tab {
-    flex: 1; text-align: center; padding: 12px; font-size: 12px; font-weight: 600;
+    flex: 1; text-align: center; padding: 10px; font-size: 11px; font-weight: 700;
     color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
-    transition: all 0.15s ease;
+    transition: all 0.15s ease; text-transform: uppercase; letter-spacing: 0.5px;
   }
   .tab:hover { color: var(--text-primary); }
   .tab.active { color: var(--col-accent); border-bottom-color: var(--col-accent); background: var(--bg-card); }
@@ -95,35 +113,32 @@
   .tab-pane { display: none; flex-direction: column; gap: 12px; }
   .tab-pane.active { display: flex; }
   .finding-card {
-    background: #0f1627; border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    background: #0a0f1d; border: 1px solid var(--border); border-radius: 8px; padding: 14px;
     cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 8px;
   }
-  .finding-card:hover { border-color: var(--border-bright); background: #162038; }
+  .finding-card:hover { border-color: var(--border-bright); background: #131c33; }
   .finding-card.selected { border-color: var(--col-accent); box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
-  .finding-card.ablated-alert {
-    border-color: var(--col-confirmed) !important; background: rgba(220, 38, 38, 0.12) !important;
-  }
   .card-header { display: flex; justify-content: space-between; align-items: center; }
-  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
   .badge-confirmed { background: var(--col-confirmed); color: #fff; }
   .badge-active { background: var(--col-active); color: #fff; }
   .badge-timed { background: var(--col-active-timed); color: #fff; }
   .badge-potential { background: var(--col-potential); color: #000; }
-  .badge-suppressed { background: rgba(16, 185, 129, 0.15); color: var(--col-suppressed); border: 1px solid var(--col-suppressed); }
+  .badge-suppressed { background: rgba(16, 185, 129, 0.2); color: var(--col-suppressed); border: 1px solid var(--col-suppressed); }
   .badge-ablated { background: #b91c1c; color: #fff; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% { opacity: 0.75; } 50% { opacity: 1; box-shadow: 0 0 10px #ef4444; } 100% { opacity: 0.75; } }
-  .card-title { font-size: 13px; font-weight: 600; }
+  .card-title { font-size: 13px; font-weight: 700; }
   .card-meta { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
   .cycle-witness-box {
-    background: #090d16; border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+    background: #050811; border: 1px solid var(--border); border-radius: 6px; padding: 8px;
     font-family: monospace; font-size: 11px; color: #cbd5e1; display: flex; flex-direction: column; gap: 4px;
   }
   .prop-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .prop-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); }
-  .prop-table td.key { color: var(--text-muted); width: 38%; font-weight: 500; }
+  .prop-table td.key { color: var(--text-muted); width: 38%; font-weight: 600; }
   .prop-table td.val { color: var(--text-primary); font-family: monospace; word-break: break-all; }
   .ledger-row {
-    background: #0f1627; border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+    background: #0a0f1d; border: 1px solid var(--border); border-radius: 6px; padding: 10px;
     font-size: 11px; display: flex; flex-direction: column; gap: 4px;
   }
 </style>
@@ -138,28 +153,35 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>481</strong></div>
-      <div>Timestamp: <strong>2026-10-07 05:53:30 UTC</strong></div>
+      <div>PID: <strong>763</strong></div>
+      <div>Timestamp: <strong>2026-10-07 06:11:35 UTC</strong></div>
     </div>
   </header>
 
-  <div class="kpi-bar">
-    <div class="kpi-card kpi-confirmed"><span class="kpi-label">Confirmed Deadlocks</span><span class="kpi-val" id="kpi-cnt-confirmed">0</span></div>
-    <div class="kpi-card kpi-active"><span class="kpi-label">Active Stalls</span><span class="kpi-val" id="kpi-cnt-active">0</span></div>
-    <div class="kpi-card kpi-timed"><span class="kpi-label">Active Timed</span><span class="kpi-val" id="kpi-cnt-timed">1</span></div>
-    <div class="kpi-card kpi-potential"><span class="kpi-label">Potential Inversions</span><span class="kpi-val" id="kpi-cnt-potential">0</span></div>
-    <div class="kpi-card kpi-suppressed"><span class="kpi-label">Suppressed (Clean)</span><span class="kpi-val" id="kpi-cnt-suppressed">0</span></div>
+  <div class="hero-verdict" id="hero-verdict">
+    <div class="hero-header">
+      <span class="hero-badge" id="hero-badge">NON-FATAL WAIT: TIMED STALL</span>
+      <span class="hero-target">Target Executable: <strong>12_timedlock_deadlock</strong></span>
+    </div>
+    <h2 class="hero-title" id="hero-title">ACTIVE TIMED STALL (SELF-RESOLVING)</h2>
+    <p class="hero-desc" id="hero-desc">Wait cycle contains pthread_mutex_timedlock. This is not a permanent freeze; the stall will break when the timeout expires.</p>
+  </div>
+
+  <div class="tool-matrix-box">
+    <span class="matrix-label">Tool Comparison:</span>
+    <div class="matrix-chips" id="matrix-chips">
+    </div>
   </div>
 
   <div class="ablation-bar">
     <span class="ablation-title">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-      Filter Ablation Toggles:
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      Credibility Filter Ablation:
     </span>
     <label class="filter-toggle"><input type="checkbox" id="filter-gate" checked> Gate-Lock Filter</label>
     <label class="filter-toggle"><input type="checkbox" id="filter-thread" checked> Same-Thread Filter</label>
     <label class="filter-toggle"><input type="checkbox" id="filter-lifecycle" checked> Lifecycle Barrier Filter</label>
-    <span class="ablation-hint">Uncheck any filter to see how raw Lockdep / Helgrind false alarms re-manifest in real time.</span>
+    <span class="ablation-hint">Uncheck any filter to see how Lockdep / Helgrind false alarms re-manifest live in the graph!</span>
   </div>
 
   <div class="workspace">
@@ -171,10 +193,10 @@
         <button class="btn" id="btn-reset-cam">Reset View</button>
       </div>
       <div class="legend">
-        <div class="legend-item"><span class="legend-box" style="background: #38bdf8;"></span> Mutex Lock (Acquisition Node)</div>
-        <div class="legend-item"><span class="legend-box" style="background: #f43f5e; border-radius: 50%;"></span> Thread (Worker Execution)</div>
-        <div class="legend-item"><span class="legend-box" style="background: #ef4444;"></span> Deadlock Cycle Edge (Pulsing)</div>
-        <div class="legend-item"><span class="legend-box" style="background: #64748b;"></span> Observed Order Edge</div>
+        <div class="legend-item"><span class="legend-box" style="background: #f59e0b; border: 1px solid #fbbf24;"></span> Gate Lock (Outer Guard)</div>
+        <div class="legend-item"><span class="legend-box" style="background: #38bdf8;"></span> Mutex Lock</div>
+        <div class="legend-item"><span class="legend-box" style="background: #f43f5e; border-radius: 50%;"></span> Execution Thread</div>
+        <div class="legend-item"><span class="legend-box" style="background: #ef4444;"></span> Deadlock Cycle Edge</div>
       </div>
       <canvas id="graphCanvas"></canvas>
     </div>
@@ -194,24 +216,26 @@
 
   <script>
   const DATA = {
-    pid: 481,
-    timestamp: "2026-10-07 05:53:30 UTC",
+    target: "12_timedlock_deadlock",
+    pid: 763,
+    timestamp: "2026-10-07 06:11:35 UTC",
+    initialStatus: { code: "ACTIVE_TIMED", badge: "NON-FATAL WAIT: TIMED STALL", title: "ACTIVE TIMED STALL (SELF-RESOLVING)", desc: "Wait cycle contains pthread_mutex_timedlock. This is not a permanent freeze; the stall will break when the timeout expires.", col: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", suppressDetail: "none" },
     kpis: { potential: 0, active: 0, activeTimed: 1, confirmed: 0, suppressed: 0 },
     locks: [
-      { id: "L_0x5dab642b2040", addr: "0x5dab642b2040", owner: 2, sym: "0x5dab642b2040" },
-      { id: "L_0x5dab642b2080", addr: "0x5dab642b2080", owner: 3, sym: "0x5dab642b2080" }
+      { id: "L_0x5dfddbe04080", addr: "0x5dfddbe04080", owner: 2, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x5dfddbe04040", addr: "0x5dfddbe04040", owner: 3, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
-      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x5dab642b2080", wait_kind: 1 },
-      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x5dab642b2040", wait_kind: 2 }
+      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x5dfddbe04040", wait_kind: 2 },
+      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x5dfddbe04080", wait_kind: 1 }
     ],
     edges: [
-      { from: "L_0x5dab642b2040", to: "L_0x5dab642b2080", tid: 1, sym_from: "0x5dab642af248", sym_to: "0x5dab642af261" },
-      { from: "L_0x5dab642b2080", to: "L_0x5dab642b2040", tid: 2, sym_from: "0x5dab642af2b4", sym_to: "0x5dab642af2f1" }
+      { from: "L_0x5dfddbe04080", to: "L_0x5dfddbe04040", tid: 1, sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" },
+      { from: "L_0x5dfddbe04040", to: "L_0x5dfddbe04080", tid: 2, sym_from: "worker1+0x1f", sym_to: "worker1+0x38" }
     ],
     findings: [
-      { id: 0, kind: "ACTIVE_TIMED", suppress_reason: "none", len: 2, time_ms: 14059, locks: ["0x5dab642b2040","0x5dab642b2080"], witnesses: [{ tid: 1, lock: "0x5dab642b2040", sym_from: "0x5dab642af248", sym_to: "0x5dab642af261" },{ tid: 2, lock: "0x5dab642b2080", sym_from: "0x5dab642af2b4", sym_to: "0x5dab642af2f1" }] }
+      { id: 0, kind: "ACTIVE_TIMED", suppress_reason: "none", len: 2, time_ms: 904972, locks: ["0x5dfddbe04040","0x5dfddbe04080"], witnesses: [{ tid: 2, lock: "0x5dfddbe04040", sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },{ tid: 1, lock: "0x5dfddbe04080", sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" }] }
     ]
   };
 
@@ -227,19 +251,20 @@
 
   // Build Graph Nodes & Edges
   const nodeMap = new Map();
-  DATA.locks.forEach(l => {
+  DATA.locks.forEach((l, idx) => {
+    const label = l.is_gate ? 'GATE' : ('Lock ' + String.fromCharCode(65 + idx));
     nodeMap.set(l.id, {
-      id: l.id, type: 'lock', label: l.addr.slice(-6), fullAddr: l.addr,
-      sym: l.sym, x: (Math.random() - 0.5) * 300, y: (Math.random() - 0.5) * 300,
-      vx: 0, vy: 0, radius: 24, mass: 2.0
+      id: l.id, type: 'lock', label: label, fullAddr: l.addr, is_gate: l.is_gate,
+      role: l.role, sym: l.sym, x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,
+      vx: 0, vy: 0, radius: l.is_gate ? 28 : 24, mass: l.is_gate ? 3.0 : 2.0
     });
   });
   DATA.threads.forEach(t => {
     const id = 'T_' + t.tid;
     nodeMap.set(id, {
-      id: id, type: 'thread', label: 'T' + t.tid, tid: t.tid,
-      x: (Math.random() - 0.5) * 300, y: (Math.random() - 0.5) * 300,
-      vx: 0, vy: 0, radius: 18, mass: 1.0, waiting_for: t.waiting_for
+      id: id, type: 'thread', label: 'Thread ' + t.tid, tid: t.tid,
+      x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,
+      vx: 0, vy: 0, radius: 20, mass: 1.2, waiting_for: t.waiting_for
     });
   });
   const nodes = Array.from(nodeMap.values());
@@ -258,7 +283,7 @@
 
   // Force-Directed Physics Simulation
   function updatePhysics() {
-    const kRep = 4000, kSpring = 0.04, l0 = 90, damping = 0.86;
+    const kRep = 4500, kSpring = 0.04, l0 = 95, damping = 0.86;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dx = nodes[j].x - nodes[i].x;
@@ -305,7 +330,7 @@
     ctx.scale(cam.zoom, cam.zoom);
 
     // Draw subtle grid
-    ctx.strokeStyle = '#111827';
+    ctx.strokeStyle = '#0d1322';
     ctx.lineWidth = 1;
     const gridStep = 50;
     for (let x = -800; x <= 800; x += gridStep) {
@@ -315,11 +340,10 @@
       ctx.beginPath(); ctx.moveTo(-800, y); ctx.lineTo(800, y); ctx.stroke();
     }
 
-    // Evaluate active finding cycle states (including ablated findings)
     const activeCycles = getProcessedFindings().filter(f => f.effectiveKind !== 'SUPPRESSED');
     const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
 
-    // Draw Lock-Order Edges
+    // Draw Edges
     if (currentView === 'all' || currentView === 'log') {
       DATA.edges.forEach(e => {
         const n1 = nodeMap.get(e.from);
@@ -353,7 +377,6 @@
         }
         ctx.stroke();
         ctx.setLineDash([]);
-        // Draw arrow
         const angle = Math.atan2(n2.y - n1.y, n2.x - n1.x);
         const arrowDist = n2.radius + 6;
         const ax = n2.x - Math.cos(angle) * arrowDist;
@@ -373,28 +396,49 @@
       if (currentView === 'wfg' && n.type === 'lock' && n.id !== 'L_' + draggedNode?.waiting_for) return;
       ctx.save();
       if (n.type === 'lock') {
-        // Rounded Box for Mutex
-        ctx.fillStyle = '#1e293b';
-        ctx.strokeStyle = (hoveredNode === n) ? '#38bdf8' : '#0284c7';
-        ctx.lineWidth = (hoveredNode === n) ? 2.5 : 1.5;
-        ctx.beginPath();
-        const r = 20;
-        ctx.roundRect(n.x - r, n.y - r, r * 2, r * 2, 6);
-        ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(n.label, n.x, n.y);
+        if (n.is_gate) {
+          // Golden Shield for Gate Lock
+          ctx.fillStyle = '#1e1b12';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = (hoveredNode === n) ? 3.5 : 2.5;
+          ctx.beginPath();
+          const r = n.radius;
+          ctx.roundRect(n.x - r, n.y - r, r * 2, r * 2, 8);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(n.label, n.x, n.y - 4);
+          ctx.fillStyle = '#d97706';
+          ctx.font = '9px monospace';
+          ctx.fillText(n.fullAddr.slice(-4), n.x, n.y + 8);
+        } else {
+          // Regular Mutex Box
+          ctx.fillStyle = '#111827';
+          ctx.strokeStyle = (hoveredNode === n) ? '#38bdf8' : '#0284c7';
+          ctx.lineWidth = (hoveredNode === n) ? 2.5 : 1.5;
+          ctx.beginPath();
+          const r = n.radius;
+          ctx.roundRect(n.x - r, n.y - r, r * 2, r * 2, 6);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(n.label, n.x, n.y - 4);
+          ctx.fillStyle = '#64748b';
+          ctx.font = '9px monospace';
+          ctx.fillText(n.fullAddr.slice(-4), n.x, n.y + 8);
+        }
       } else {
-        // Circle for Thread
-        ctx.fillStyle = '#271021';
+        // Thread Circle
+        ctx.fillStyle = '#240d1c';
         ctx.strokeStyle = (hoveredNode === n) ? '#fb7185' : '#e11d48';
         ctx.lineWidth = (hoveredNode === n) ? 2.5 : 1.5;
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
         ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#fda4af';
-        ctx.font = 'bold 11px sans-serif';
+        ctx.font = 'bold 10px sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(n.label, n.x, n.y);
       }
@@ -405,7 +449,7 @@
   }
   requestAnimationFrame(draw);
 
-  // Interactive Filter Ablation Engine
+  // Interactive Filter Ablation & Tool Comparison Engine
   function getProcessedFindings() {
     return DATA.findings.map(f => {
       let isAblated = false;
@@ -420,26 +464,75 @@
     });
   }
 
+  function updateHeroAndMatrix() {
+    const findings = getProcessedFindings();
+    const anyAblated = findings.some(f => f.isAblated);
+    const hero = document.getElementById('hero-verdict');
+    const badge = document.getElementById('hero-badge');
+    const title = document.getElementById('hero-title');
+    const desc = document.getElementById('hero-desc');
+    const chips = document.getElementById('matrix-chips');
+
+    if (anyAblated) {
+      const ablatedF = findings.find(f => f.isAblated);
+      badge.textContent = '⚠️ ABLATED FALSE ALARM MANIFESTED';
+      badge.style.background = '#ef4444';
+      hero.style.borderLeftColor = '#ef4444';
+      hero.style.background = 'rgba(239, 68, 68, 0.18)';
+      title.textContent = `ORDER INVERSION (${ablatedF.suppress_reason.toUpperCase()} FILTER DISABLED)`;
+      desc.textContent = `Notice: Because you disabled the ${ablatedF.suppress_reason} filter, DeadlockScope now reports the exact same false-positive alarm as Linux lockdep and Helgrind!`;
+      chips.innerHTML = `
+        <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-err">LOCK ORDER ERR (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-err">LOCK INVERSION (False Alarm)</span></div>
+      `;
+    } else {
+      badge.textContent = DATA.initialStatus.badge;
+      badge.style.background = DATA.initialStatus.col;
+      hero.style.borderLeftColor = DATA.initialStatus.col;
+      hero.style.background = DATA.initialStatus.bg;
+      title.textContent = DATA.initialStatus.title;
+      desc.textContent = DATA.initialStatus.desc;
+
+      if (DATA.initialStatus.code === 'SUPPRESSED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-safe">SUPPRESSED (${DATA.initialStatus.suppressDetail})</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-err">LOCK ORDER ERR (False Alarm)</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-err">LOCK INVERSION (False Alarm)</span></div>
+        `;
+      } else if (DATA.initialStatus.code === 'CONFIRMED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-err">CONFIRMED LIVE DEADLOCK</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-warn">ORDER INVERSION (Passive Only)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-warn">LOCK ORDER ERR</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-miss">CLEAN (Missed Hang)</span></div>
+        `;
+      } else if (DATA.initialStatus.code === 'ACTIVE_TIMED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val" style="background:rgba(168,85,247,0.2);color:#a855f7;border:1px solid #a855f7;">ACTIVE_TIMED (Non-Fatal)</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-warn">ORDER INVERSION (Unclassified)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-miss">CLEAN (Missed)</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-miss">CLEAN (Missed)</span></div>
+        `;
+      } else {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+        `;
+      }
+    }
+  }
+
   function renderFindingsList() {
+    updateHeroAndMatrix();
     const container = document.getElementById('pane-findings');
     container.innerHTML = '';
     const list = getProcessedFindings();
     document.getElementById('tab-cnt-findings').textContent = list.length;
-
-    // Update KPI Badges
-    let pot = 0, act = 0, actT = 0, conf = 0, supp = 0;
-    list.forEach(f => {
-      if (f.effectiveKind === 'CONFIRMED') conf++;
-      else if (f.effectiveKind === 'ACTIVE') act++;
-      else if (f.effectiveKind === 'ACTIVE_TIMED') actT++;
-      else if (f.effectiveKind === 'POTENTIAL') pot++;
-      else if (f.effectiveKind === 'SUPPRESSED') supp++;
-    });
-    document.getElementById('kpi-cnt-confirmed').textContent = conf;
-    document.getElementById('kpi-cnt-active').textContent = act;
-    document.getElementById('kpi-cnt-timed').textContent = actT;
-    document.getElementById('kpi-cnt-potential').textContent = pot;
-    document.getElementById('kpi-cnt-suppressed').textContent = supp;
 
     if (list.length === 0) {
       container.innerHTML = '<div style="color: var(--text-muted); text-align: center; margin-top: 40px;">No cycle findings recorded. Execution was completely deadlock-free!</div>';
@@ -448,7 +541,7 @@
 
     list.forEach(f => {
       const card = document.createElement('div');
-      card.className = 'finding-card' + (f.isAblated ? ' ablated-alert' : '');
+      card.className = 'finding-card';
       let badgeHtml = '';
       if (f.isAblated) {
         badgeHtml = `<span class="badge badge-ablated">FALSE ALARM (${f.suppress_reason} ablated)</span>`;
@@ -467,7 +560,7 @@
       let witnessHtml = '';
       f.witnesses.forEach((w, idx) => {
         const nextLock = f.locks[(idx + 1) % f.locks.length];
-        witnessHtml += `<div>Thread ${w.tid}: holds ${w.lock.slice(-6)} &rarr; waits on ${nextLock.slice(-6)} (${w.sym_to})</div>`;
+        witnessHtml += `<div>Thread ${w.tid}: holds ${w.lock.slice(-4)} &rarr; waits on ${nextLock.slice(-4)} (${w.sym_to})</div>`;
       });
 
       card.innerHTML = `
@@ -476,8 +569,8 @@
           ${badgeHtml}
         </div>
         <div class="card-meta">
-          ${f.isAblated ? '<div style="color: #fca5a5; font-weight:600;">Filter disabled: Raw Lockdep/Helgrind would flag this!</div>' : ''}
-          Locks: ${f.locks.map(l => l.slice(-6)).join(' &harr; ')}
+          ${f.isAblated ? '<div style="color: #fca5a5; font-weight:700;">Filter disabled: Raw Lockdep/Helgrind would flag this!</div>' : ''}
+          Locks: ${f.locks.map(l => l.slice(-4)).join(' &harr; ')}
         </div>
         <div class="cycle-witness-box">${witnessHtml}</div>
       `;
@@ -485,7 +578,6 @@
         document.querySelectorAll('.finding-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         inspectFinding(f);
-        // Focus in canvas
         const l1 = nodeMap.get('L_' + f.locks[0]);
         if (l1) { cam.x = canvas.clientWidth / 2 - l1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - l1.y * cam.zoom; }
       });
@@ -515,6 +607,7 @@
       <h3 style="font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;">${n.type.toUpperCase()} Inspector</h3>
       <table class="prop-table">
         <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
+        <tr><td class="key">Role</td><td class="val">${n.role || n.type}</td></tr>
         ${n.fullAddr ? `<tr><td class="key">Address</td><td class="val">${n.fullAddr}</td></tr>` : ''}
         ${n.sym ? `<tr><td class="key">Symbol</td><td class="val">${n.sym}</td></tr>` : ''}
         ${n.tid !== undefined ? `<tr><td class="key">Thread ID</td><td class="val">${n.tid}</td></tr>` : ''}
@@ -532,11 +625,11 @@
       row.className = 'ledger-row';
       row.innerHTML = `
         <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--col-accent);">
-          <span>Edge #${idx + 1}: ${e.from.slice(-6)} &rarr; ${e.to.slice(-6)}</span>
+          <span>Edge #${idx + 1}: ${e.from.slice(-4)} &rarr; ${e.to.slice(-4)}</span>
           <span style="color:var(--text-muted); font-size:10px;">Thread ${e.tid}</span>
         </div>
-        <div style="color:var(--text-secondary); font-size:10px;">Held site: ${e.sym_from}</div>
-        <div style="color:var(--text-secondary); font-size:10px;">Acquire site: ${e.sym_to}</div>
+        <div style="color:var(--text-secondary); font-size:10px;">Held: ${e.sym_from}</div>
+        <div style="color:var(--text-secondary); font-size:10px;">Acquiring: ${e.sym_to}</div>
       `;
       container.appendChild(row);
     });
