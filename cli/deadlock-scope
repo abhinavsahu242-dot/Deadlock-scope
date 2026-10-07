@@ -38,6 +38,15 @@ while [[ $# -gt 0 ]]; do
       export DEADLOCKSCOPE_DOT="$2"
       shift 2
       ;;
+    --html)
+      if [[ -n "$2" && "$2" != --* ]]; then
+        export DEADLOCKSCOPE_HTML="$2"
+        shift 2
+      else
+        export DEADLOCKSCOPE_HTML="deadlock_report.html"
+        shift
+      fi
+      ;;
     --)
       shift
       break
@@ -54,7 +63,7 @@ if [[ ! -f "$LIB_PATH" ]]; then
 fi
 
 if [[ $# -eq 0 ]]; then
-  echo "Usage: deadlock-scope [--stress [ms]] [--filters thread,gate,lifecycle] [--dot out.dot] [--debug] -- <program> [args...]"
+  echo "Usage: deadlock-scope [--stress [ms]] [--filters thread,gate,lifecycle] [--dot out.dot] [--html [out.html]] [--debug] -- <program> [args...]"
   exit 1
 fi
 

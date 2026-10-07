@@ -89,6 +89,11 @@ static void ds_load_config(void) {
         strncpy(g_config.dot_file, dot_env, sizeof(g_config.dot_file) - 1);
     }
 
+    const char *html_env = getenv("DEADLOCKSCOPE_HTML");
+    if (html_env && strlen(html_env) > 0) {
+        strncpy(g_config.html_file, html_env, sizeof(g_config.html_file) - 1);
+    }
+
     /* Filter configuration */
     const char *filt_env = getenv("DEADLOCKSCOPE_FILTERS");
     if (filt_env) {
@@ -164,5 +169,9 @@ void ds_fini(void) {
 
     if (g_config.dot_file[0] != '\0') {
         ds_report_export_dot(g_config.dot_file);
+    }
+
+    if (g_config.html_file[0] != '\0') {
+        ds_report_export_html(g_config.html_file);
     }
 }

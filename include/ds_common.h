@@ -116,6 +116,7 @@ typedef struct {
     int debug;
     int filter_mask;
     char dot_file[256];
+    char html_file[256];
 } DSConfig;
 
 /* Global externs */

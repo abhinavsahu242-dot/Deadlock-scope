@@ -88,6 +88,13 @@ static void *watchdog_main(void *arg) {
                                 active_cycle.witnesses[(k + 1) % active_cycle.length].tid);
                     }
                     fprintf(stderr, "======================================\n\n");
+
+                    if (g_config.dot_file[0] != '\0') {
+                        ds_report_export_dot(g_config.dot_file);
+                    }
+                    if (g_config.html_file[0] != '\0') {
+                        ds_report_export_html(g_config.html_file);
+                    }
                 }
             } else {
                 /* New candidate cycle sighting */

@@ -19,7 +19,7 @@ DeadlockScope couples proactive lock-order prediction with automated dynamic val
 | **Timed Wait Taxonomy** | **None.** Treats all locks identically. | Distinguishes **`ACTIVE`** (unyielding) from **`ACTIVE_TIMED`** (timedlock waits that may break on timeout). |
 | **Credibility Heuristics** | Basic class order checking; noisy on single-thread or gate-guarded critical sections. | **Multi-tier Credibility Filters** (Same-Thread, Gate-Lock, Spawn/Join Lifecycle Barriers). |
 | **Evaluation & Ablation** | Monolithic on/off switch. | **Configurable Filter Ablation Matrix (L0 $\to$ L3)** measuring empirical false-positive reduction ratios. |
-| **Visualization** | Text warnings in dmesg. | **Dual-Cluster Graphviz (.dot)** visualizing the Lock-Order Graph alongside the live Wait-For Graph. |
+| **Interactive Visualization** | Text warnings in dmesg. | **Zero-Dependency Interactive HTML Dashboard (`--html`)** with physics-based force graph, live filter ablation toggles, and dual-cluster Graphviz (`--dot`). |
 
 ---
 
@@ -137,8 +137,24 @@ Run any multithreaded executable under DeadlockScope without recompiling:
 # Export dual-cluster Graphviz lock graph
 ./cli/deadlock-scope --dot lock_graph.dot -- ./your_program [args...]
 
+# Generate interactive zero-dependency HTML diagnostic dashboard
+./cli/deadlock-scope --html report.html -- ./your_program [args...]
+
 # Render the graph
 dot -Tpng lock_graph.dot -o lock_graph.png
+```
+
+### Interactive HTML Diagnostic Dashboard
+
+DeadlockScope can generate a completely self-contained, zero-dependency HTML report (`--html [report.html]`) that opens in any browser offline:
+- **Interactive Force-Directed Graph:** Draggable lock nodes (cyan rounded rectangles) and thread nodes (pink circles), with animated pulsing halos on detected cycle edges.
+- **Client-Side Filter Ablation Toggles:** Live checkboxes for *Gate-Lock*, *Same-Thread*, and *Lifecycle* filters. Unchecking a filter immediately causes suppressed cycles to re-manifest in the browser as flashing red false-alarms, demonstrating why raw Lockdep / Helgrind trigger noisy warnings.
+- **Telemetry Inspector & Edge Ledger:** Click any node, edge, or finding card to inspect mutex addresses, callsite symbols (`worker1+0x1b`), owner threads, and hold timestamps.
+
+Generate sample reports across representative test cases:
+```bash
+make html
+# Opens reports in reports/*.html
 ```
 
 ---
