@@ -37,15 +37,20 @@ compare: all
 
 html: all
 	@mkdir -p reports
-	@echo "Generating full suite of interactive HTML diagnostic reports..."
+	@echo "Generating full suite of interactive HTML diagnostic reports for all 12 test scenarios..."
 	@timeout 2 ./cli/deadlock-scope --html reports/01_simple_deadlock.html -- ./tests/bin/01_simple_deadlock >/dev/null 2>&1 || true
+	@timeout 2 ./cli/deadlock-scope --html reports/02_cycle_3thread.html -- ./tests/bin/02_cycle_3thread >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/03_potential_benign.html -- ./tests/bin/03_potential_benign >/dev/null 2>&1 || true
 	@./cli/deadlock-scope --html reports/04_gate_lock.html -- ./tests/bin/04_gate_lock >/dev/null 2>&1 || true
 	@./cli/deadlock-scope --html reports/05_same_thread.html -- ./tests/bin/05_same_thread >/dev/null 2>&1 || true
 	@./cli/deadlock-scope --html reports/06_lifecycle_ordered.html -- ./tests/bin/06_lifecycle_ordered >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/07_trylock_recovery.html -- ./tests/bin/07_trylock_recovery >/dev/null 2>&1 || true
 	@timeout 2 ./cli/deadlock-scope --stress 50 --html reports/08_provocation_test.html -- ./tests/bin/08_provocation_test >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/09_recursive_mutex.html -- ./tests/bin/09_recursive_mutex >/dev/null 2>&1 || true
 	@./cli/deadlock-scope --html reports/10_clean_parallel.html -- ./tests/bin/10_clean_parallel >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/11_cond_wait_held_set.html -- ./tests/bin/11_cond_wait_held_set >/dev/null 2>&1 || true
 	@timeout 2 ./cli/deadlock-scope --html reports/12_timedlock.html -- ./tests/bin/12_timedlock_deadlock >/dev/null 2>&1 || true
-	@echo "Diagnostic HTML reports generated in reports/:"
+	@echo "All 12 diagnostic HTML reports generated in reports/:"
 	@ls -lh reports/*.html
 
 .PHONY: all clean tests check compare html

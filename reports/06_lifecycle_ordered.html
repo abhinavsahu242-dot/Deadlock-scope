@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>3875</strong></div>
-      <div>Timestamp: <strong>2026-10-07 09:48:01 UTC</strong></div>
+      <div>PID: <strong>4048</strong></div>
+      <div>Timestamp: <strong>2026-10-07 09:55:39 UTC</strong></div>
     </div>
   </header>
 
@@ -218,13 +218,13 @@
   <script>
   const DATA = {
     target: "06_lifecycle_ordered",
-    pid: 3875,
-    timestamp: "2026-10-07 09:48:01 UTC",
+    pid: 4048,
+    timestamp: "2026-10-07 09:55:39 UTC",
     initialStatus: { code: "SUPPRESSED", badge: "VERIFIED SAFE: BENIGN PATTERN", title: "SUPPRESSED (LIFECYCLE BARRIER)", desc: "Threads are strictly separated by a pthread_join synchronization barrier. Thread 1 terminated before Thread 2 was spawned.", col: "#06b6d4", bg: "rgba(6, 182, 212, 0.12)", suppressDetail: "lifecycle" },
     kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 0, suppressed: 1 },
     locks: [
-      { id: "L_0x5e13a1350040", addr: "0x5e13a1350040", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x5e13a1350080", addr: "0x5e13a1350080", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x5dc5e9cea040", addr: "0x5dc5e9cea040", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x5dc5e9cea080", addr: "0x5dc5e9cea080", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
@@ -232,13 +232,13 @@
       { tid: 2, active: 0, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 }
     ],
     edges: [
-      { from: "L_0x5e13a1350040", to: "L_0x5e13a1350080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x2e" },
-      { from: "L_0x5e13a1350080", to: "L_0x5e13a1350040", tid: 2, sym_from: "worker2+0x1f", sym_to: "worker2+0x2e" }
+      { from: "L_0x5dc5e9cea040", to: "L_0x5dc5e9cea080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x2e" },
+      { from: "L_0x5dc5e9cea080", to: "L_0x5dc5e9cea040", tid: 2, sym_from: "worker2+0x1f", sym_to: "worker2+0x2e" }
     ],
     wfg_edges: [
     ],
     findings: [
-      { id: 0, kind: "SUPPRESSED", suppress_reason: "lifecycle", len: 2, time_ms: 7343582, locks: ["0x5e13a1350040","0x5e13a1350080"], witnesses: [{ tid: 1, lock: "0x5e13a1350040", sym_from: "worker1+0x1f", sym_to: "worker1+0x2e" },{ tid: 2, lock: "0x5e13a1350080", sym_from: "worker2+0x1f", sym_to: "worker2+0x2e" }] }
+      { id: 0, kind: "SUPPRESSED", suppress_reason: "lifecycle", len: 2, time_ms: 7801765, locks: ["0x5dc5e9cea040","0x5dc5e9cea080"], witnesses: [{ tid: 1, lock: "0x5dc5e9cea040", sym_from: "worker1+0x1f", sym_to: "worker1+0x2e" },{ tid: 2, lock: "0x5dc5e9cea080", sym_from: "worker2+0x1f", sym_to: "worker2+0x2e" }] }
     ]
   };
 

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeadlockScope - 09_recursive_mutex [CLEAN]</title>
+<style>
+  :root {
+    --bg-main: #070b14; --bg-card: #0f172a; --bg-card-hover: #1e293b;
+    --border: #1e293b; --border-bright: #334155; --text-primary: #f8fafc;
+    --text-secondary: #94a3b8; --text-muted: #64748b;
+    --status-col: #10b981; --status-bg: rgba(16, 185, 129, 0.12);
+    --col-potential: #f59e0b; --col-active: #ef4444; --col-active-timed: #a855f7;
+    --col-confirmed: #dc2626; --col-suppressed: #10b981; --col-accent: #38bdf8; --col-gate: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main); color: var(--text-primary);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  header {
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-badge {
+    background: linear-gradient(135deg, #ef4444, #f59e0b); color: #fff;
+    font-weight: 800; font-size: 13px; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+  }
+  .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .brand .subtitle { font-size: 11px; color: var(--text-muted); }
+  .meta-tags { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+  .meta-tag strong { color: var(--text-primary); }
+  .hero-verdict {
+    background: var(--status-bg); border-bottom: 1px solid var(--border);
+    border-left: 6px solid var(--status-col); padding: 14px 24px;
+    display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+  .hero-header { display: flex; align-items: center; gap: 12px; }
+  .hero-badge {
+    background: var(--status-col); color: #fff; font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .hero-target { font-size: 13px; color: var(--text-secondary); }
+  .hero-target strong { color: var(--text-primary); font-family: monospace; font-size: 14px; }
+  .hero-title { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; color: #fff; }
+  .hero-desc { font-size: 13px; color: #cbd5e1; line-height: 1.4; max-width: 1100px; }
+  .tool-matrix-box {
+    background: rgba(15, 23, 42, 0.7); border-bottom: 1px solid var(--border);
+    padding: 10px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+  }
+  .matrix-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--col-accent); white-space: nowrap;
+  }
+  .matrix-chips { display: flex; gap: 12px; flex: 1; overflow-x: auto; }
+  .matrix-chip {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px;
+  }
+  .matrix-chip strong { color: var(--text-muted); font-size: 11px; }
+  .chip-val { font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+  .chip-safe { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+  .chip-err { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+  .chip-warn { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+  .chip-miss { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #64748b; }
+  .ablation-bar {
+    background: #090e1a; border-bottom: 1px solid var(--border); padding: 8px 24px;
+    display: flex; align-items: center; gap: 20px; font-size: 12px; flex-shrink: 0;
+  }
+  .ablation-title { font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px; }
+  .filter-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; color: var(--text-secondary); }
+  .filter-toggle input { cursor: pointer; accent-color: var(--col-suppressed); transform: scale(1.1); }
+  .filter-toggle:hover { color: var(--text-primary); }
+  .ablation-hint { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+  .workspace { display: flex; flex: 1; overflow: hidden; }
+  .canvas-panel { flex: 1; position: relative; display: flex; flex-direction: column; background: #050811; }
+  .canvas-toolbar {
+    position: absolute; top: 12px; left: 12px; z-index: 10; display: flex; gap: 8px;
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px;
+  }
+  .btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-bright); }
+  .btn.active { background: var(--col-accent); color: #000; border-color: var(--col-accent); }
+  .legend {
+    position: absolute; bottom: 12px; left: 12px; z-index: 10;
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; font-size: 11px; display: flex; flex-direction: column;
+    gap: 6px; color: var(--text-secondary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-box { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  #graphCanvas { width: 100%; height: 100%; cursor: grab; display: block; }
+  #graphCanvas:active { cursor: grabbing; }
+  .sidebar { width: 440px; background: var(--bg-card); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.5); }
+  .tab {
+    flex: 1; text-align: center; padding: 10px; font-size: 11px; font-weight: 700;
+    color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s ease; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .tab:hover { color: var(--text-primary); }
+  .tab.active { color: var(--col-accent); border-bottom-color: var(--col-accent); background: var(--bg-card); }
+  .tab-content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .tab-pane { display: none; flex-direction: column; gap: 12px; }
+  .tab-pane.active { display: flex; }
+  .finding-card {
+    background: #0a0f1d; border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; gap: 8px;
+  }
+  .finding-card:hover { border-color: var(--border-bright); background: #131c33; }
+  .finding-card.selected { border-color: var(--col-accent); box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-confirmed { background: var(--col-confirmed); color: #fff; }
+  .badge-active { background: var(--col-active); color: #fff; }
+  .badge-timed { background: var(--col-active-timed); color: #fff; }
+  .badge-potential { background: var(--col-potential); color: #000; }
+  .badge-suppressed { background: rgba(16, 185, 129, 0.2); color: var(--col-suppressed); border: 1px solid var(--col-suppressed); }
+  .badge-ablated { background: #b91c1c; color: #fff; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { opacity: 0.75; } 50% { opacity: 1; box-shadow: 0 0 10px #ef4444; } 100% { opacity: 0.75; } }
+  .card-title { font-size: 13px; font-weight: 700; }
+  .card-meta { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+  .cycle-witness-box {
+    background: #050811; border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+    font-family: monospace; font-size: 11px; color: #cbd5e1; display: flex; flex-direction: column; gap: 4px;
+  }
+  .prop-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .prop-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  .prop-table td.key { color: var(--text-muted); width: 38%; font-weight: 600; }
+  .prop-table td.val { color: var(--text-primary); font-family: monospace; word-break: break-all; }
+  .ledger-row {
+    background: #0a0f1d; border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+    font-size: 11px; display: flex; flex-direction: column; gap: 4px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-badge">DEADLOCKSCOPE</span>
+      <div>
+        <h1>Runtime Concurrency & Deadlock Diagnostics</h1>
+        <span class="subtitle">Dynamic Lock-Order Analysis, Credibility Filtering & Live Wait-For Verification</span>
+      </div>
+    </div>
+    <div class="meta-tags">
+      <div>PID: <strong>4070</strong></div>
+      <div>Timestamp: <strong>2026-10-07 09:55:41 UTC</strong></div>
+    </div>
+  </header>
+
+  <div class="hero-verdict" id="hero-verdict">
+    <div class="hero-header">
+      <span class="hero-badge" id="hero-badge">VERIFIED DEADLOCK-FREE</span>
+      <span class="hero-target">Target Executable: <strong>09_recursive_mutex</strong></span>
+    </div>
+    <h2 class="hero-title" id="hero-title">CLEAN: STRICT LOCK-ORDER COMPLIANCE</h2>
+    <p class="hero-desc" id="hero-desc">Zero lock inversions observed. All observed mutex acquisitions respect a strict hierarchical order.</p>
+  </div>
+
+  <div class="tool-matrix-box">
+    <span class="matrix-label">Tool Comparison:</span>
+    <div class="matrix-chips" id="matrix-chips">
+    </div>
+  </div>
+
+  <div class="ablation-bar">
+    <span class="ablation-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      Credibility Filter Ablation:
+    </span>
+    <label class="filter-toggle"><input type="checkbox" id="filter-gate" checked> Gate-Lock Filter</label>
+    <label class="filter-toggle"><input type="checkbox" id="filter-thread" checked> Same-Thread Filter</label>
+    <label class="filter-toggle"><input type="checkbox" id="filter-lifecycle" checked> Lifecycle Barrier Filter</label>
+    <span class="ablation-hint">Uncheck any filter to see how Lockdep / Helgrind false alarms re-manifest live in the graph!</span>
+  </div>
+
+  <div class="workspace">
+    <div class="canvas-panel">
+      <div class="canvas-toolbar">
+        <button class="btn active" id="btn-view-all">Unified Graph</button>
+        <button class="btn" id="btn-view-log">Lock-Order Only</button>
+        <button class="btn" id="btn-view-wfg">Wait-For Only</button>
+        <button class="btn" id="btn-reset-cam">Reset View</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-box" style="background: #f59e0b; border: 1px solid #fbbf24;"></span> Gate Lock (Outer Guard)</div>
+        <div class="legend-item"><span class="legend-box" style="background: #38bdf8;"></span> Mutex Lock</div>
+        <div class="legend-item"><span class="legend-box" style="background: #f43f5e; border-radius: 50%;"></span> Execution Thread</div>
+        <div class="legend-item"><span class="legend-box" style="background: #334155; height: 3px;"></span> Lock-Order Edge (LOG)</div>
+        <div class="legend-item"><span class="legend-box" style="background: #ef4444; height: 5px; border-radius: 2px;"></span> Wait-For Edge (WFG Live Wait)</div>
+      </div>
+      <canvas id="graphCanvas"></canvas>
+    </div>
+    <div class="sidebar">
+      <div class="tabs">
+        <div class="tab active" data-target="pane-findings">Findings (<span id="tab-cnt-findings">0</span>)</div>
+        <div class="tab" data-target="pane-inspector">Inspector</div>
+        <div class="tab" data-target="pane-ledger">Edge Ledger</div>
+      </div>
+      <div class="tab-content">
+        <div class="tab-pane active" id="pane-findings"></div>
+        <div class="tab-pane" id="pane-inspector"><div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 40px;">Click any node, edge, or finding card to inspect its telemetry.</div></div>
+        <div class="tab-pane" id="pane-ledger"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const DATA = {
+    target: "09_recursive_mutex",
+    pid: 4070,
+    timestamp: "2026-10-07 09:55:41 UTC",
+    initialStatus: { code: "CLEAN", badge: "VERIFIED DEADLOCK-FREE", title: "CLEAN: STRICT LOCK-ORDER COMPLIANCE", desc: "Zero lock inversions observed. All observed mutex acquisitions respect a strict hierarchical order.", col: "#10b981", bg: "rgba(16, 185, 129, 0.12)", suppressDetail: "none" },
+    kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 0, suppressed: 0 },
+    locks: [
+      { id: "L_0x58c153598040", addr: "0x58c153598040", owner: 0, sym: "recLock+0x0", is_gate: false, role: "Worker Mutex" }
+    ],
+    threads: [
+      { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 }
+    ],
+    edges: [
+    ],
+    wfg_edges: [
+    ],
+    findings: [
+    ]
+  };
+
+  // --- Client-Side Application Engine ---
+  let currentView = 'all';
+  let selectedItem = null;
+  let filterState = { gate: true, thread: true, lifecycle: true };
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  let cam = { x: 0, y: 0, zoom: 1.0, isPanning: false, startX: 0, startY: 0 };
+  let draggedNode = null;
+  let hoveredNode = null;
+
+  // Build Graph Nodes & Edges
+  const nodeMap = new Map();
+  DATA.locks.forEach((l, idx) => {
+    const label = l.is_gate ? 'GATE' : ('Lock ' + String.fromCharCode(65 + idx));
+    nodeMap.set(l.id, {
+      id: l.id, type: 'lock', label: label, fullAddr: l.addr, is_gate: l.is_gate,
+      role: l.role, sym: l.sym, x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,
+      vx: 0, vy: 0, radius: l.is_gate ? 28 : 24, mass: l.is_gate ? 3.0 : 2.0
+    });
+  });
+  DATA.threads.forEach(t => {
+    const id = 'T_' + t.tid;
+    nodeMap.set(id, {
+      id: id, type: 'thread', label: 'Thread ' + t.tid, tid: t.tid,
+      x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,
+      vx: 0, vy: 0, radius: 22, mass: 1.4, is_waiting: t.is_waiting, waiting_for: t.waiting_for, wait_kind: t.wait_kind
+    });
+  });
+  const nodes = Array.from(nodeMap.values());
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  cam.x = canvas.clientWidth / 2;
+  cam.y = canvas.clientHeight / 2;
+
+  // Force-Directed Physics Simulation
+  function updatePhysics() {
+    const kRep = 4500, kSpring = 0.04, l0 = 95, damping = 0.86;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        if (dist < 400) {
+          const force = kRep / (dist * dist);
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
+          nodes[i].vx -= fx / nodes[i].mass;
+          nodes[i].vy -= fy / nodes[i].mass;
+          nodes[j].vx += fx / nodes[j].mass;
+          nodes[j].vy += fy / nodes[j].mass;
+        }
+      }
+    }
+    DATA.edges.forEach(e => {
+      const n1 = nodeMap.get(e.from);
+      const n2 = nodeMap.get(e.to);
+      if (n1 && n2) {
+        const dx = n2.x - n1.x, dy = n2.y - n1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (dist - l0) * kSpring;
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        n1.vx += fx; n1.vy += fy;
+        n2.vx -= fx; n2.vy -= fy;
+      }
+    });
+    DATA.wfg_edges.forEach(we => {
+      const t1 = nodeMap.get(we.from);
+      const t2 = nodeMap.get(we.to);
+      if (t1 && t2) {
+        const dx = t2.x - t1.x, dy = t2.y - t1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (dist - 140) * (kSpring * 0.8);
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        t1.vx += fx; t1.vy += fy;
+        t2.vx -= fx; t2.vy -= fy;
+      }
+      const lk = nodeMap.get(we.lock);
+      if (t1 && lk) {
+        const dx = lk.x - t1.x, dy = lk.y - t1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (dist - 90) * (kSpring * 0.6);
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        t1.vx += fx; t1.vy += fy;
+        lk.vx -= fx; lk.vy -= fy;
+      }
+    });
+    nodes.forEach(n => {
+      if (n !== draggedNode) {
+        n.vx -= n.x * 0.002; n.vy -= n.y * 0.002;
+        n.vx *= damping; n.vy *= damping;
+        n.x += n.vx; n.y += n.vy;
+      }
+    });
+  }
+
+  // Render Graph Loop
+  function draw() {
+    updatePhysics();
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(cam.x, cam.y);
+    ctx.scale(cam.zoom, cam.zoom);
+
+    // Draw subtle grid
+    ctx.strokeStyle = '#0d1322';
+    ctx.lineWidth = 1;
+    const gridStep = 50;
+    for (let x = -800; x <= 800; x += gridStep) {
+      ctx.beginPath(); ctx.moveTo(x, -800); ctx.lineTo(x, 800); ctx.stroke();
+    }
+    for (let y = -800; y <= 800; y += gridStep) {
+      ctx.beginPath(); ctx.moveTo(-800, y); ctx.lineTo(800, y); ctx.stroke();
+    }
+
+    const activeCycles = getProcessedFindings().filter(f => f.effectiveKind !== 'SUPPRESSED');
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+
+    // Draw Edges
+    if (currentView === 'all' || currentView === 'log') {
+      DATA.edges.forEach(e => {
+        const n1 = nodeMap.get(e.from);
+        const n2 = nodeMap.get(e.to);
+        if (!n1 || !n2) return;
+        let isCycleEdge = false, isAblatedEdge = false;
+        activeCycles.forEach(f => {
+          for (let k = 0; k < f.locks.length; k++) {
+            const l1 = 'L_' + f.locks[k];
+            const l2 = 'L_' + f.locks[(k + 1) % f.locks.length];
+            if (l1 === e.from && l2 === e.to) {
+              isCycleEdge = true;
+              if (f.isAblated) isAblatedEdge = true;
+            }
+          }
+        });
+        ctx.beginPath();
+        ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y);
+        if (isAblatedEdge) {
+          ctx.strokeStyle = `rgba(245, 158, 11, ${0.5 + 0.5 * pulse})`;
+          ctx.lineWidth = 3;
+          ctx.setLineDash([6, 4]);
+        } else if (isCycleEdge) {
+          ctx.strokeStyle = `rgba(239, 68, 68, ${0.6 + 0.4 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.setLineDash([]);
+        } else {
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const angle = Math.atan2(n2.y - n1.y, n2.x - n1.x);
+        const arrowDist = n2.radius + 6;
+        const ax = n2.x - Math.cos(angle) * arrowDist;
+        const ay = n2.y - Math.sin(angle) * arrowDist;
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - 9 * Math.cos(angle - 0.4), ay - 9 * Math.sin(angle - 0.4));
+        ctx.lineTo(ax - 9 * Math.cos(angle + 0.4), ay - 9 * Math.sin(angle + 0.4));
+        ctx.fill();
+      });
+    }
+
+    // Draw Wait-For Graph Edges (WFG)
+    if (currentView === 'all' || currentView === 'wfg') {
+      DATA.wfg_edges.forEach(we => {
+        const t1 = nodeMap.get(we.from);
+        const t2 = nodeMap.get(we.to);
+        const lk = nodeMap.get(we.lock);
+        if (!t1 || !t2) return;
+
+        const hasReverse = DATA.wfg_edges.some(other => other.from === we.to && other.to === we.from);
+        const dx = t2.x - t1.x, dy = t2.y - t1.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const nx = -dy / dist, ny = dx / dist;
+        const curveOffset = hasReverse ? 38 : 18;
+        const cx = (t1.x + t2.x) / 2 + nx * curveOffset;
+        const cy = (t1.y + t2.y) / 2 + ny * curveOffset;
+
+        ctx.beginPath();
+        ctx.moveTo(t1.x, t1.y);
+        ctx.quadraticCurveTo(cx, cy, t2.x, t2.y);
+        if (we.is_timed) {
+          ctx.strokeStyle = `rgba(168, 85, 247, ${0.75 + 0.25 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.setLineDash([8, 4]);
+        } else {
+          ctx.strokeStyle = `rgba(239, 68, 68, ${0.8 + 0.2 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const tx = t2.x - cx, ty = t2.y - cy;
+        const angle = Math.atan2(ty, tx);
+        const arrowDist = t2.radius + 6;
+        const ax = t2.x - Math.cos(angle) * arrowDist;
+        const ay = t2.y - Math.sin(angle) * arrowDist;
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - 11 * Math.cos(angle - 0.45), ay - 11 * Math.sin(angle - 0.45));
+        ctx.lineTo(ax - 11 * Math.cos(angle + 0.45), ay - 11 * Math.sin(angle + 0.45));
+        ctx.fill();
+
+        const lockLabel = lk ? lk.label : (we.lock_sym || we.lock_addr.slice(-4));
+        const labelText = `waits on ${lockLabel}`;
+        ctx.font = 'bold 9px monospace';
+        const txtWidth = ctx.measureText(labelText).width;
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = we.is_timed ? '#a855f7' : '#ef4444';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cx - txtWidth / 2 - 5, cy - 8, txtWidth + 10, 16, 4);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = we.is_timed ? '#d8b4fe' : '#fca5a5';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, cx, cy);
+
+        if (lk) {
+          ctx.beginPath();
+          ctx.moveTo(t1.x, t1.y); ctx.lineTo(lk.x, lk.y);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+    }
+
+    // Draw Nodes
+    nodes.forEach(n => {
+      if (currentView === 'log' && n.type === 'thread') return;
+      if (currentView === 'wfg' && n.type === 'lock' && !DATA.wfg_edges.some(we => we.lock === n.id)) return;
+      ctx.save();
+      if (n.type === 'lock') {
+        if (n.is_gate) {
+          // Golden Shield for Gate Lock
+          ctx.fillStyle = '#1e1b12';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = (hoveredNode === n) ? 3.5 : 2.5;
+          ctx.beginPath();
+          const r = n.radius;
+          ctx.roundRect(n.x - r, n.y - r, r * 2, r * 2, 8);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(n.label, n.x, n.y - 4);
+          ctx.fillStyle = '#d97706';
+          ctx.font = '9px monospace';
+          ctx.fillText(n.fullAddr.slice(-4), n.x, n.y + 8);
+        } else {
+          // Regular Mutex Box
+          ctx.fillStyle = '#111827';
+          ctx.strokeStyle = (hoveredNode === n) ? '#38bdf8' : '#0284c7';
+          ctx.lineWidth = (hoveredNode === n) ? 2.5 : 1.5;
+          ctx.beginPath();
+          const r = n.radius;
+          ctx.roundRect(n.x - r, n.y - r, r * 2, r * 2, 6);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(n.label, n.x, n.y - 4);
+          ctx.fillStyle = '#64748b';
+          ctx.font = '9px monospace';
+          ctx.fillText(n.fullAddr.slice(-4), n.x, n.y + 8);
+        }
+      } else {
+        // Thread Circle
+        ctx.fillStyle = '#240d1c';
+        ctx.strokeStyle = (hoveredNode === n) ? '#fb7185' : '#e11d48';
+        ctx.lineWidth = (hoveredNode === n) ? 2.5 : 1.5;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fda4af';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(n.label, n.x, n.y);
+      }
+      ctx.restore();
+    });
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  // Interactive Filter Ablation & Tool Comparison Engine
+  function getProcessedFindings() {
+    return DATA.findings.map(f => {
+      let isAblated = false;
+      let effKind = f.kind;
+      if (f.kind === 'SUPPRESSED') {
+        if (f.suppress_reason === 'gate_lock' && !filterState.gate) isAblated = true;
+        if (f.suppress_reason === 'same_thread' && !filterState.thread) isAblated = true;
+        if (f.suppress_reason === 'lifecycle' && !filterState.lifecycle) isAblated = true;
+        if (isAblated) effKind = 'POTENTIAL';
+      }
+      return { ...f, isAblated: isAblated, effectiveKind: effKind };
+    });
+  }
+
+  function updateHeroAndMatrix() {
+    const findings = getProcessedFindings();
+    const anyAblated = findings.some(f => f.isAblated);
+    const hero = document.getElementById('hero-verdict');
+    const badge = document.getElementById('hero-badge');
+    const title = document.getElementById('hero-title');
+    const desc = document.getElementById('hero-desc');
+    const chips = document.getElementById('matrix-chips');
+
+    if (anyAblated) {
+      const ablatedF = findings.find(f => f.isAblated);
+      badge.textContent = '⚠️ ABLATED FALSE ALARM MANIFESTED';
+      badge.style.background = '#ef4444';
+      hero.style.borderLeftColor = '#ef4444';
+      hero.style.background = 'rgba(239, 68, 68, 0.18)';
+      title.textContent = `ORDER INVERSION (${ablatedF.suppress_reason.toUpperCase()} FILTER DISABLED)`;
+      desc.textContent = `Notice: Because you disabled the ${ablatedF.suppress_reason} filter, DeadlockScope now reports the exact same false-positive alarm as Linux lockdep and Helgrind!`;
+      chips.innerHTML = `
+        <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-err">LOCK ORDER ERR (False Alarm)</span></div>
+        <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-err">LOCK INVERSION (False Alarm)</span></div>
+      `;
+    } else {
+      badge.textContent = DATA.initialStatus.badge;
+      badge.style.background = DATA.initialStatus.col;
+      hero.style.borderLeftColor = DATA.initialStatus.col;
+      hero.style.background = DATA.initialStatus.bg;
+      title.textContent = DATA.initialStatus.title;
+      desc.textContent = DATA.initialStatus.desc;
+
+      if (DATA.initialStatus.code === 'SUPPRESSED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-safe">SUPPRESSED (${DATA.initialStatus.suppressDetail})</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-err">ORDER INVERSION (False Alarm)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-err">LOCK ORDER ERR (False Alarm)</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-err">LOCK INVERSION (False Alarm)</span></div>
+        `;
+      } else if (DATA.initialStatus.code === 'CONFIRMED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val chip-err">CONFIRMED LIVE DEADLOCK</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-warn">ORDER INVERSION (Passive Only)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-warn">LOCK ORDER ERR</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-miss">CLEAN (Missed Hang)</span></div>
+        `;
+      } else if (DATA.initialStatus.code === 'ACTIVE_TIMED') {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope (Ours):</strong><span class="chip-val" style="background:rgba(168,85,247,0.2);color:#a855f7;border:1px solid #a855f7;">ACTIVE_TIMED (Non-Fatal)</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-warn">ORDER INVERSION (Unclassified)</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-miss">CLEAN (Missed)</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-miss">CLEAN (Missed)</span></div>
+        `;
+      } else {
+        chips.innerHTML = `
+          <div class="matrix-chip"><strong>DeadlockScope:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>Linux lockdep:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>Helgrind:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+          <div class="matrix-chip"><strong>ThreadSanitizer:</strong><span class="chip-val chip-safe">CLEAN</span></div>
+        `;
+      }
+    }
+  }
+
+  function renderFindingsList() {
+    updateHeroAndMatrix();
+    const container = document.getElementById('pane-findings');
+    container.innerHTML = '';
+    const list = getProcessedFindings();
+    document.getElementById('tab-cnt-findings').textContent = list.length;
+
+    if (list.length === 0) {
+      container.innerHTML = '<div style="color: var(--text-muted); text-align: center; margin-top: 40px;">No cycle findings recorded. Execution was completely deadlock-free!</div>';
+      return;
+    }
+
+    list.forEach(f => {
+      const card = document.createElement('div');
+      card.className = 'finding-card';
+      let badgeHtml = '';
+      if (f.isAblated) {
+        badgeHtml = `<span class="badge badge-ablated">FALSE ALARM (${f.suppress_reason} ablated)</span>`;
+      } else if (f.kind === 'CONFIRMED') {
+        badgeHtml = '<span class="badge badge-confirmed">CONFIRMED LIVE</span>';
+      } else if (f.kind === 'ACTIVE') {
+        badgeHtml = '<span class="badge badge-active">ACTIVE DEADLOCK</span>';
+      } else if (f.kind === 'ACTIVE_TIMED') {
+        badgeHtml = '<span class="badge badge-timed">ACTIVE TIMED</span>';
+      } else if (f.kind === 'POTENTIAL') {
+        badgeHtml = '<span class="badge badge-potential">POTENTIAL</span>';
+      } else {
+        badgeHtml = `<span class="badge badge-suppressed">SUPPRESSED (${f.suppress_reason})</span>`;
+      }
+
+      let witnessHtml = '';
+      f.witnesses.forEach((w, idx) => {
+        const nextLock = f.locks[(idx + 1) % f.locks.length];
+        witnessHtml += `<div>Thread ${w.tid}: holds ${w.lock.slice(-4)} &rarr; waits on ${nextLock.slice(-4)} (${w.sym_to})</div>`;
+      });
+
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="card-title">Cycle Depth: ${f.len} Locks</span>
+          ${badgeHtml}
+        </div>
+        <div class="card-meta">
+          ${f.isAblated ? '<div style="color: #fca5a5; font-weight:700;">Filter disabled: Raw Lockdep/Helgrind would flag this!</div>' : ''}
+          Locks: ${f.locks.map(l => l.slice(-4)).join(' &harr; ')}
+        </div>
+        <div class="cycle-witness-box">${witnessHtml}</div>
+      `;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.finding-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        inspectFinding(f);
+        const l1 = nodeMap.get('L_' + f.locks[0]);
+        if (l1) { cam.x = canvas.clientWidth / 2 - l1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - l1.y * cam.zoom; }
+      });
+      container.appendChild(card);
+    });
+  }
+
+  function inspectFinding(f) {
+    const pane = document.getElementById('pane-inspector');
+    pane.innerHTML = `
+      <h3 style="font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;">Cycle Finding Telemetry</h3>
+      <table class="prop-table">
+        <tr><td class="key">Status</td><td class="val">${f.effectiveKind}</td></tr>
+        <tr><td class="key">Filter Status</td><td class="val">${f.suppress_reason}</td></tr>
+        <tr><td class="key">Cycle Length</td><td class="val">${f.len}</td></tr>
+        <tr><td class="key">Detection Time</td><td class="val">${f.time_ms} ms</td></tr>
+      </table>
+      <h4 style="font-size: 12px; margin-top: 12px; color: var(--text-secondary);">Involved Mutexes:</h4>
+      <div style="font-family: monospace; font-size: 11px;">${f.locks.map(l => '<div>&bull; ' + l + '</div>').join('')}</div>
+    `;
+    document.querySelector('.tab[data-target="pane-inspector"]').click();
+  }
+
+  function inspectNode(n) {
+    const pane = document.getElementById('pane-inspector');
+    if (n.type === 'thread') {
+      const wfgOut = DATA.wfg_edges.filter(we => we.from === n.id);
+      const wfgIn = DATA.wfg_edges.filter(we => we.to === n.id);
+      let waitStatus = '<span style="color:#10b981; font-weight:700;">ACTIVE (RUNNING)</span>';
+      let extraRows = '';
+      if (wfgOut.length > 0) {
+        const we = wfgOut[0];
+        waitStatus = `<span style="color:#ef4444; font-weight:700;">BLOCKED WAITING (${we.is_timed ? 'TIMEDLOCK' : 'MUTEX'})</span>`;
+        extraRows += `<tr><td class="key">Waiting For</td><td class="val" style="color:#f87171;">${we.lock_sym} (${we.lock_addr})</td></tr>`;
+        extraRows += `<tr><td class="key">Blocked By</td><td class="val" style="color:#f87171;">${we.to}</td></tr>`;
+        extraRows += `<tr><td class="key">Wait Call-Site</td><td class="val">${we.site_sym}</td></tr>`;
+      }
+      if (wfgIn.length > 0) {
+        extraRows += `<tr><td class="key">Holding Lock For</td><td class="val">${wfgIn.map(we => we.from).join(', ')}</td></tr>`;
+      }
+      pane.innerHTML = `
+        <h3 style="font-size: 14px; font-weight: 700; color: #fb7185; margin-bottom: 8px;">THREAD INSPECTOR (${n.label})</h3>
+        <table class="prop-table">
+          <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
+          <tr><td class="key">Thread ID</td><td class="val">${n.tid}</td></tr>
+          <tr><td class="key">State</td><td class="val">${waitStatus}</td></tr>
+          ${extraRows}
+        </table>
+      `;
+    } else {
+      pane.innerHTML = `
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;">${n.type.toUpperCase()} Inspector</h3>
+        <table class="prop-table">
+          <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
+          <tr><td class="key">Role</td><td class="val">${n.role || n.type}</td></tr>
+          ${n.fullAddr ? `<tr><td class="key">Address</td><td class="val">${n.fullAddr}</td></tr>` : ''}
+          ${n.sym ? `<tr><td class="key">Symbol</td><td class="val">${n.sym}</td></tr>` : ''}
+        </table>
+      `;
+    }
+    document.querySelector('.tab[data-target="pane-inspector"]').click();
+  }
+
+  // Render Edge Ledger
+  function renderLedger() {
+    const container = document.getElementById('pane-ledger');
+    container.innerHTML = '';
+
+    if (DATA.wfg_edges && DATA.wfg_edges.length > 0) {
+      const wfgHeader = document.createElement('div');
+      wfgHeader.style = 'font-weight:700; color:#ef4444; margin-bottom:6px; font-size:12px; display:flex; align-items:center; gap:6px;';
+      wfgHeader.innerHTML = '<span>⚡ Live Wait-For Graph (WFG) Dependencies (' + DATA.wfg_edges.length + ')</span>';
+      container.appendChild(wfgHeader);
+      DATA.wfg_edges.forEach((we, idx) => {
+        const row = document.createElement('div');
+        row.className = 'ledger-row';
+        row.style.borderColor = we.is_timed ? '#a855f7' : '#ef4444';
+        row.style.background = 'rgba(239, 68, 68, 0.08)';
+        row.style.cursor = 'pointer';
+        row.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:700; color:${we.is_timed ? '#c084fc' : '#f87171'};
+            <span>WFG #${idx + 1}: ${we.from} &rarr; ${we.to}</span>
+            <span class="badge ${we.is_timed ? 'badge-timed' : 'badge-confirmed'}">${we.is_timed ? 'TIMEDLOCK' : 'WAITING'}</span>
+          </div>
+          <div style="color:var(--text-primary); font-size:11px;">Blocked On: <strong>${we.lock_sym}</strong> (${we.lock_addr.slice(-4)})</div>
+          <div style="color:var(--text-secondary); font-size:10px;">Wait Call-Site: ${we.site_sym}</div>
+          <div style="color:var(--text-muted); font-size:10px;">Held By: ${we.to}</div>
+        `;
+        row.addEventListener('click', () => {
+          const t1 = nodeMap.get(we.from);
+          if (t1) { cam.x = canvas.clientWidth / 2 - t1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - t1.y * cam.zoom; inspectNode(t1); }
+        });
+        container.appendChild(row);
+      });
+      const div = document.createElement('div');
+      div.style = 'border-top:1px solid var(--border); margin:12px 0;';
+      container.appendChild(div);
+    }
+
+    const logHeader = document.createElement('div');
+    logHeader.style = 'font-weight:700; color:var(--col-accent); margin-bottom:6px; font-size:12px;';
+    logHeader.textContent = 'Lock-Order Graph (LOG) Acquisitions (' + DATA.edges.length + ')';
+    container.appendChild(logHeader);
+
+    DATA.edges.forEach((e, idx) => {
+      const row = document.createElement('div');
+      row.className = 'ledger-row';
+      row.style.cursor = 'pointer';
+      row.innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--col-accent);">
+          <span>Edge #${idx + 1}: ${e.from.slice(-4)} &rarr; ${e.to.slice(-4)}</span>
+          <span style="color:var(--text-muted); font-size:10px;">Thread ${e.tid}</span>
+        </div>
+        <div style="color:var(--text-secondary); font-size:10px;">Held: ${e.sym_from}</div>
+        <div style="color:var(--text-secondary); font-size:10px;">Acquiring: ${e.sym_to}</div>
+      `;
+      row.addEventListener('click', () => {
+        const l1 = nodeMap.get(e.from);
+        if (l1) { cam.x = canvas.clientWidth / 2 - l1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - l1.y * cam.zoom; inspectNode(l1); }
+      });
+      container.appendChild(row);
+    });
+  }
+
+  // Tab Switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+
+  // Ablation Checkbox Listeners
+  ['gate', 'thread', 'lifecycle'].forEach(k => {
+    const cb = document.getElementById('filter-' + k);
+    cb.addEventListener('change', () => {
+      filterState[k] = cb.checked;
+      renderFindingsList();
+    });
+  });
+
+  // View Mode Buttons
+  document.getElementById('btn-view-all').addEventListener('click', function() {
+    currentView = 'all'; setActiveViewBtn(this);
+  });
+  document.getElementById('btn-view-log').addEventListener('click', function() {
+    currentView = 'log'; setActiveViewBtn(this);
+  });
+  document.getElementById('btn-view-wfg').addEventListener('click', function() {
+    currentView = 'wfg'; setActiveViewBtn(this);
+  });
+  document.getElementById('btn-reset-cam').addEventListener('click', () => {
+    cam.x = canvas.clientWidth / 2; cam.y = canvas.clientHeight / 2; cam.zoom = 1.0;
+  });
+  function setActiveViewBtn(btn) {
+    ['btn-view-all', 'btn-view-log', 'btn-view-wfg'].forEach(id => document.getElementById(id).classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Canvas Pointer & Pan/Zoom Interaction
+  canvas.addEventListener('pointerdown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left - cam.x) / cam.zoom;
+    const my = (e.clientY - rect.top - cam.y) / cam.zoom;
+    draggedNode = nodes.find(n => Math.hypot(n.x - mx, n.y - my) <= n.radius + 6);
+    if (draggedNode) {
+      inspectNode(draggedNode);
+    } else {
+      cam.isPanning = true;
+      cam.startX = e.clientX - cam.x;
+      cam.startY = e.clientY - cam.y;
+    }
+  });
+  window.addEventListener('pointermove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left - cam.x) / cam.zoom;
+    const my = (e.clientY - rect.top - cam.y) / cam.zoom;
+    hoveredNode = nodes.find(n => Math.hypot(n.x - mx, n.y - my) <= n.radius + 6);
+    if (draggedNode) {
+      draggedNode.x = mx; draggedNode.y = my;
+      draggedNode.vx = 0; draggedNode.vy = 0;
+    } else if (cam.isPanning) {
+      cam.x = e.clientX - cam.startX;
+      cam.y = e.clientY - cam.startY;
+    }
+  });
+  window.addEventListener('pointerup', () => {
+    draggedNode = null; cam.isPanning = false;
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    cam.zoom = Math.max(0.2, Math.min(3.0, cam.zoom * factor));
+  });
+
+  // Initial Render
+  renderFindingsList();
+  renderLedger();
+  </script>
+</body>
+</html>

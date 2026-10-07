@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>3870</strong></div>
-      <div>Timestamp: <strong>2026-10-07 09:48:01 UTC</strong></div>
+      <div>PID: <strong>4043</strong></div>
+      <div>Timestamp: <strong>2026-10-07 09:55:39 UTC</strong></div>
     </div>
   </header>
 
@@ -218,25 +218,25 @@
   <script>
   const DATA = {
     target: "05_same_thread",
-    pid: 3870,
-    timestamp: "2026-10-07 09:48:01 UTC",
+    pid: 4043,
+    timestamp: "2026-10-07 09:55:39 UTC",
     initialStatus: { code: "SUPPRESSED", badge: "VERIFIED SAFE: BENIGN PATTERN", title: "SUPPRESSED (SAME-THREAD SEQUENTIAL)", desc: "All conflicting lock acquisitions occurred sequentially within the same thread. No concurrent race condition can occur.", col: "#14b8a6", bg: "rgba(20, 184, 166, 0.12)", suppressDetail: "same_thread" },
     kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 0, suppressed: 1 },
     locks: [
-      { id: "L_0x648819cde040", addr: "0x648819cde040", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x648819cde080", addr: "0x648819cde080", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x64cc7d619040", addr: "0x64cc7d619040", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x64cc7d619080", addr: "0x64cc7d619080", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 }
     ],
     edges: [
-      { from: "L_0x648819cde040", to: "L_0x648819cde080", tid: 0, sym_from: "main+0x17", sym_to: "main+0x26" },
-      { from: "L_0x648819cde080", to: "L_0x648819cde040", tid: 0, sym_from: "main+0x53", sym_to: "main+0x62" }
+      { from: "L_0x64cc7d619040", to: "L_0x64cc7d619080", tid: 0, sym_from: "main+0x17", sym_to: "main+0x26" },
+      { from: "L_0x64cc7d619080", to: "L_0x64cc7d619040", tid: 0, sym_from: "main+0x53", sym_to: "main+0x62" }
     ],
     wfg_edges: [
     ],
     findings: [
-      { id: 0, kind: "SUPPRESSED", suppress_reason: "same_thread", len: 2, time_ms: 7343420, locks: ["0x648819cde040","0x648819cde080"], witnesses: [{ tid: 0, lock: "0x648819cde040", sym_from: "main+0x17", sym_to: "main+0x26" },{ tid: 0, lock: "0x648819cde080", sym_from: "main+0x53", sym_to: "main+0x62" }] }
+      { id: 0, kind: "SUPPRESSED", suppress_reason: "same_thread", len: 2, time_ms: 7801611, locks: ["0x64cc7d619040","0x64cc7d619080"], witnesses: [{ tid: 0, lock: "0x64cc7d619040", sym_from: "main+0x17", sym_to: "main+0x26" },{ tid: 0, lock: "0x64cc7d619080", sym_from: "main+0x53", sym_to: "main+0x62" }] }
     ]
   };
 
