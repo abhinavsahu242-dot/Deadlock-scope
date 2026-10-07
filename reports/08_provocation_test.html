@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>755</strong></div>
-      <div>Timestamp: <strong>2026-10-07 06:11:33 UTC</strong></div>
+      <div>PID: <strong>877</strong></div>
+      <div>Timestamp: <strong>2026-10-07 06:17:51 UTC</strong></div>
     </div>
   </header>
 
@@ -217,25 +217,25 @@
   <script>
   const DATA = {
     target: "08_provocation_test",
-    pid: 755,
-    timestamp: "2026-10-07 06:11:33 UTC",
+    pid: 877,
+    timestamp: "2026-10-07 06:17:51 UTC",
     initialStatus: { code: "CONFIRMED", badge: "CRITICAL FAILURE: LIVE DEADLOCK", title: "CONFIRMED ACTIVE DEADLOCK (PROCESS FROZEN)", desc: "Threads entered a permanent circular wait state. Deadlock actively manifested and halted execution progress.", col: "#ef4444", bg: "rgba(239, 68, 68, 0.15)", suppressDetail: "none" },
     kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 1, suppressed: 0 },
     locks: [
-      { id: "L_0x5bc6b0470040", addr: "0x5bc6b0470040", owner: 2, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x5bc6b0470080", addr: "0x5bc6b0470080", owner: 3, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x64f39c919040", addr: "0x64f39c919040", owner: 2, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x64f39c919080", addr: "0x64f39c919080", owner: 3, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
-      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x5bc6b0470080", wait_kind: 1 },
-      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x5bc6b0470040", wait_kind: 1 }
+      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x64f39c919080", wait_kind: 1 },
+      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x64f39c919040", wait_kind: 1 }
     ],
     edges: [
-      { from: "L_0x5bc6b0470040", to: "L_0x5bc6b0470080", tid: 1, sym_from: "worker1+0x28", sym_to: "worker1+0x41" },
-      { from: "L_0x5bc6b0470080", to: "L_0x5bc6b0470040", tid: 2, sym_from: "worker2+0x32", sym_to: "worker2+0x4b" }
+      { from: "L_0x64f39c919040", to: "L_0x64f39c919080", tid: 1, sym_from: "worker1+0x28", sym_to: "worker1+0x41" },
+      { from: "L_0x64f39c919080", to: "L_0x64f39c919040", tid: 2, sym_from: "worker2+0x32", sym_to: "worker2+0x4b" }
     ],
     findings: [
-      { id: 0, kind: "CONFIRMED", suppress_reason: "none", len: 2, time_ms: 903188, locks: ["0x5bc6b0470040","0x5bc6b0470080"], witnesses: [{ tid: 1, lock: "0x5bc6b0470040", sym_from: "worker1+0x28", sym_to: "worker1+0x41" },{ tid: 2, lock: "0x5bc6b0470080", sym_from: "worker2+0x32", sym_to: "worker2+0x4b" }] }
+      { id: 0, kind: "CONFIRMED", suppress_reason: "none", len: 2, time_ms: 1280799, locks: ["0x64f39c919040","0x64f39c919080"], witnesses: [{ tid: 1, lock: "0x64f39c919040", sym_from: "worker1+0x28", sym_to: "worker1+0x41" },{ tid: 2, lock: "0x64f39c919080", sym_from: "worker2+0x32", sym_to: "worker2+0x4b" }] }
     ]
   };
 

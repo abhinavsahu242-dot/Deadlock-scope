@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>747</strong></div>
-      <div>Timestamp: <strong>2026-10-07 06:11:31 UTC</strong></div>
+      <div>PID: <strong>857</strong></div>
+      <div>Timestamp: <strong>2026-10-07 06:17:49 UTC</strong></div>
     </div>
   </header>
 
@@ -217,14 +217,14 @@
   <script>
   const DATA = {
     target: "04_gate_lock",
-    pid: 747,
-    timestamp: "2026-10-07 06:11:31 UTC",
+    pid: 857,
+    timestamp: "2026-10-07 06:17:49 UTC",
     initialStatus: { code: "SUPPRESSED", badge: "VERIFIED SAFE: BENIGN PATTERN", title: "SUPPRESSED (GATE-LOCK SERIALIZED)", desc: "An inverted lock order exists, but all conflicting sections are protected by an outer gate lock. Mutual exclusion is guaranteed.", col: "#10b981", bg: "rgba(16, 185, 129, 0.12)", suppressDetail: "gate_lock" },
     kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 0, suppressed: 1 },
     locks: [
-      { id: "L_0x57197498c040", addr: "0x57197498c040", owner: 0, sym: "gateLock+0x0", is_gate: true, role: "Gate Lock (G)" },
-      { id: "L_0x57197498c080", addr: "0x57197498c080", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x57197498c0c0", addr: "0x57197498c0c0", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x5ff8ccae8040", addr: "0x5ff8ccae8040", owner: 0, sym: "gateLock+0x0", is_gate: true, role: "Gate Lock (G)" },
+      { id: "L_0x5ff8ccae80c0", addr: "0x5ff8ccae80c0", owner: 0, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x5ff8ccae8080", addr: "0x5ff8ccae8080", owner: 0, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
@@ -232,13 +232,13 @@
       { tid: 2, active: 0, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 }
     ],
     edges: [
-      { from: "L_0x57197498c040", to: "L_0x57197498c080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x2e" },
-      { from: "L_0x57197498c040", to: "L_0x57197498c0c0", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x3d" },
-      { from: "L_0x57197498c080", to: "L_0x57197498c0c0", tid: 1, sym_from: "worker1+0x2e", sym_to: "worker1+0x3d" },
-      { from: "L_0x57197498c0c0", to: "L_0x57197498c080", tid: 2, sym_from: "worker2+0x2e", sym_to: "worker2+0x3d" }
+      { from: "L_0x5ff8ccae8040", to: "L_0x5ff8ccae80c0", tid: 1, sym_from: "worker2+0x1f", sym_to: "worker2+0x2e" },
+      { from: "L_0x5ff8ccae8040", to: "L_0x5ff8ccae8080", tid: 1, sym_from: "worker2+0x1f", sym_to: "worker2+0x3d" },
+      { from: "L_0x5ff8ccae80c0", to: "L_0x5ff8ccae8080", tid: 1, sym_from: "worker2+0x2e", sym_to: "worker2+0x3d" },
+      { from: "L_0x5ff8ccae8080", to: "L_0x5ff8ccae80c0", tid: 2, sym_from: "worker1+0x2e", sym_to: "worker1+0x3d" }
     ],
     findings: [
-      { id: 0, kind: "SUPPRESSED", suppress_reason: "gate_lock", len: 2, time_ms: 901650, locks: ["0x57197498c080","0x57197498c0c0"], witnesses: [{ tid: 1, lock: "0x57197498c080", sym_from: "worker1+0x2e", sym_to: "worker1+0x3d" },{ tid: 2, lock: "0x57197498c0c0", sym_from: "worker2+0x2e", sym_to: "worker2+0x3d" }] }
+      { id: 0, kind: "SUPPRESSED", suppress_reason: "gate_lock", len: 2, time_ms: 1279556, locks: ["0x5ff8ccae8080","0x5ff8ccae80c0"], witnesses: [{ tid: 2, lock: "0x5ff8ccae8080", sym_from: "worker1+0x2e", sym_to: "worker1+0x3d" },{ tid: 1, lock: "0x5ff8ccae80c0", sym_from: "worker2+0x2e", sym_to: "worker2+0x3d" }] }
     ]
   };
 

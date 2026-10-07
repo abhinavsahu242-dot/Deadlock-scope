@@ -37,12 +37,15 @@ compare: all
 
 html: all
 	@mkdir -p reports
-	@echo "Generating sample HTML diagnostic reports..."
+	@echo "Generating full suite of interactive HTML diagnostic reports..."
 	@timeout 2 ./cli/deadlock-scope --html reports/01_simple_deadlock.html -- ./tests/bin/01_simple_deadlock >/dev/null 2>&1 || true
 	@./cli/deadlock-scope --html reports/04_gate_lock.html -- ./tests/bin/04_gate_lock >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/05_same_thread.html -- ./tests/bin/05_same_thread >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/06_lifecycle_ordered.html -- ./tests/bin/06_lifecycle_ordered >/dev/null 2>&1 || true
 	@timeout 2 ./cli/deadlock-scope --stress 50 --html reports/08_provocation_test.html -- ./tests/bin/08_provocation_test >/dev/null 2>&1 || true
+	@./cli/deadlock-scope --html reports/10_clean_parallel.html -- ./tests/bin/10_clean_parallel >/dev/null 2>&1 || true
 	@timeout 2 ./cli/deadlock-scope --html reports/12_timedlock.html -- ./tests/bin/12_timedlock_deadlock >/dev/null 2>&1 || true
-	@echo "Sample HTML reports generated in reports/:"
+	@echo "Diagnostic HTML reports generated in reports/:"
 	@ls -lh reports/*.html
 
 .PHONY: all clean tests check compare html

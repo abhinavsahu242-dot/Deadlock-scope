@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>763</strong></div>
-      <div>Timestamp: <strong>2026-10-07 06:11:35 UTC</strong></div>
+      <div>PID: <strong>894</strong></div>
+      <div>Timestamp: <strong>2026-10-07 06:17:53 UTC</strong></div>
     </div>
   </header>
 
@@ -217,25 +217,25 @@
   <script>
   const DATA = {
     target: "12_timedlock_deadlock",
-    pid: 763,
-    timestamp: "2026-10-07 06:11:35 UTC",
+    pid: 894,
+    timestamp: "2026-10-07 06:17:53 UTC",
     initialStatus: { code: "ACTIVE_TIMED", badge: "NON-FATAL WAIT: TIMED STALL", title: "ACTIVE TIMED STALL (SELF-RESOLVING)", desc: "Wait cycle contains pthread_mutex_timedlock. This is not a permanent freeze; the stall will break when the timeout expires.", col: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", suppressDetail: "none" },
     kpis: { potential: 0, active: 0, activeTimed: 1, confirmed: 0, suppressed: 0 },
     locks: [
-      { id: "L_0x5dfddbe04080", addr: "0x5dfddbe04080", owner: 2, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x5dfddbe04040", addr: "0x5dfddbe04040", owner: 3, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x56dd5deb9040", addr: "0x56dd5deb9040", owner: 2, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x56dd5deb9080", addr: "0x56dd5deb9080", owner: 3, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
-      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x5dfddbe04040", wait_kind: 2 },
-      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x5dfddbe04080", wait_kind: 1 }
+      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x56dd5deb9080", wait_kind: 1 },
+      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x56dd5deb9040", wait_kind: 2 }
     ],
     edges: [
-      { from: "L_0x5dfddbe04080", to: "L_0x5dfddbe04040", tid: 1, sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" },
-      { from: "L_0x5dfddbe04040", to: "L_0x5dfddbe04080", tid: 2, sym_from: "worker1+0x1f", sym_to: "worker1+0x38" }
+      { from: "L_0x56dd5deb9040", to: "L_0x56dd5deb9080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },
+      { from: "L_0x56dd5deb9080", to: "L_0x56dd5deb9040", tid: 2, sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" }
     ],
     findings: [
-      { id: 0, kind: "ACTIVE_TIMED", suppress_reason: "none", len: 2, time_ms: 904972, locks: ["0x5dfddbe04040","0x5dfddbe04080"], witnesses: [{ tid: 2, lock: "0x5dfddbe04040", sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },{ tid: 1, lock: "0x5dfddbe04080", sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" }] }
+      { id: 0, kind: "ACTIVE_TIMED", suppress_reason: "none", len: 2, time_ms: 1282984, locks: ["0x56dd5deb9040","0x56dd5deb9080"], witnesses: [{ tid: 1, lock: "0x56dd5deb9040", sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },{ tid: 2, lock: "0x56dd5deb9080", sym_from: "worker2+0x2e", sym_to: "worker2+0x6b" }] }
     ]
   };
 
