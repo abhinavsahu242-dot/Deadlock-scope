@@ -153,8 +153,8 @@
       </div>
     </div>
     <div class="meta-tags">
-      <div>PID: <strong>850</strong></div>
-      <div>Timestamp: <strong>2026-10-07 06:17:47 UTC</strong></div>
+      <div>PID: <strong>3856</strong></div>
+      <div>Timestamp: <strong>2026-10-07 09:47:59 UTC</strong></div>
     </div>
   </header>
 
@@ -196,7 +196,8 @@
         <div class="legend-item"><span class="legend-box" style="background: #f59e0b; border: 1px solid #fbbf24;"></span> Gate Lock (Outer Guard)</div>
         <div class="legend-item"><span class="legend-box" style="background: #38bdf8;"></span> Mutex Lock</div>
         <div class="legend-item"><span class="legend-box" style="background: #f43f5e; border-radius: 50%;"></span> Execution Thread</div>
-        <div class="legend-item"><span class="legend-box" style="background: #ef4444;"></span> Deadlock Cycle Edge</div>
+        <div class="legend-item"><span class="legend-box" style="background: #334155; height: 3px;"></span> Lock-Order Edge (LOG)</div>
+        <div class="legend-item"><span class="legend-box" style="background: #ef4444; height: 5px; border-radius: 2px;"></span> Wait-For Edge (WFG Live Wait)</div>
       </div>
       <canvas id="graphCanvas"></canvas>
     </div>
@@ -217,25 +218,29 @@
   <script>
   const DATA = {
     target: "01_simple_deadlock",
-    pid: 850,
-    timestamp: "2026-10-07 06:17:47 UTC",
+    pid: 3856,
+    timestamp: "2026-10-07 09:47:59 UTC",
     initialStatus: { code: "CONFIRMED", badge: "CRITICAL FAILURE: LIVE DEADLOCK", title: "CONFIRMED ACTIVE DEADLOCK (PROCESS FROZEN)", desc: "Threads entered a permanent circular wait state. Deadlock actively manifested and halted execution progress.", col: "#ef4444", bg: "rgba(239, 68, 68, 0.15)", suppressDetail: "none" },
     kpis: { potential: 0, active: 0, activeTimed: 0, confirmed: 1, suppressed: 0 },
     locks: [
-      { id: "L_0x64ee5c1ad040", addr: "0x64ee5c1ad040", owner: 2, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
-      { id: "L_0x64ee5c1ad080", addr: "0x64ee5c1ad080", owner: 3, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
+      { id: "L_0x5c93b6f04040", addr: "0x5c93b6f04040", owner: 2, sym: "lockA+0x0", is_gate: false, role: "Worker Mutex" },
+      { id: "L_0x5c93b6f04080", addr: "0x5c93b6f04080", owner: 3, sym: "lockB+0x0", is_gate: false, role: "Worker Mutex" }
     ],
     threads: [
       { tid: 0, active: 1, is_waiting: 0, waiting_for: "0x0", wait_kind: 0 },
-      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x64ee5c1ad080", wait_kind: 1 },
-      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x64ee5c1ad040", wait_kind: 1 }
+      { tid: 1, active: 1, is_waiting: 1, waiting_for: "0x5c93b6f04080", wait_kind: 1 },
+      { tid: 2, active: 1, is_waiting: 1, waiting_for: "0x5c93b6f04040", wait_kind: 1 }
     ],
     edges: [
-      { from: "L_0x64ee5c1ad040", to: "L_0x64ee5c1ad080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },
-      { from: "L_0x64ee5c1ad080", to: "L_0x64ee5c1ad040", tid: 2, sym_from: "worker2+0x1f", sym_to: "worker2+0x38" }
+      { from: "L_0x5c93b6f04040", to: "L_0x5c93b6f04080", tid: 1, sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },
+      { from: "L_0x5c93b6f04080", to: "L_0x5c93b6f04040", tid: 2, sym_from: "worker2+0x1f", sym_to: "worker2+0x38" }
+    ],
+    wfg_edges: [
+      { from: "T_1", to: "T_2", lock: "L_0x5c93b6f04080", lock_addr: "0x5c93b6f04080", lock_sym: "lockB+0x0", site_sym: "worker1+0x38", wait_kind: 1, is_timed: false, is_cycle: true },
+      { from: "T_2", to: "T_1", lock: "L_0x5c93b6f04040", lock_addr: "0x5c93b6f04040", lock_sym: "lockA+0x0", site_sym: "worker2+0x38", wait_kind: 1, is_timed: false, is_cycle: true }
     ],
     findings: [
-      { id: 0, kind: "CONFIRMED", suppress_reason: "none", len: 2, time_ms: 1277284, locks: ["0x64ee5c1ad040","0x64ee5c1ad080"], witnesses: [{ tid: 1, lock: "0x64ee5c1ad040", sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },{ tid: 2, lock: "0x64ee5c1ad080", sym_from: "worker2+0x1f", sym_to: "worker2+0x38" }] }
+      { id: 0, kind: "CONFIRMED", suppress_reason: "none", len: 2, time_ms: 7341208, locks: ["0x5c93b6f04040","0x5c93b6f04080"], witnesses: [{ tid: 1, lock: "0x5c93b6f04040", sym_from: "worker1+0x1f", sym_to: "worker1+0x38" },{ tid: 2, lock: "0x5c93b6f04080", sym_from: "worker2+0x1f", sym_to: "worker2+0x38" }] }
     ]
   };
 
@@ -264,7 +269,7 @@
     nodeMap.set(id, {
       id: id, type: 'thread', label: 'Thread ' + t.tid, tid: t.tid,
       x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,
-      vx: 0, vy: 0, radius: 20, mass: 1.2, waiting_for: t.waiting_for
+      vx: 0, vy: 0, radius: 22, mass: 1.4, is_waiting: t.is_waiting, waiting_for: t.waiting_for, wait_kind: t.wait_kind
     });
   });
   const nodes = Array.from(nodeMap.values());
@@ -310,6 +315,27 @@
         const fx = (dx / dist) * f, fy = (dy / dist) * f;
         n1.vx += fx; n1.vy += fy;
         n2.vx -= fx; n2.vy -= fy;
+      }
+    });
+    DATA.wfg_edges.forEach(we => {
+      const t1 = nodeMap.get(we.from);
+      const t2 = nodeMap.get(we.to);
+      if (t1 && t2) {
+        const dx = t2.x - t1.x, dy = t2.y - t1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (dist - 140) * (kSpring * 0.8);
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        t1.vx += fx; t1.vy += fy;
+        t2.vx -= fx; t2.vy -= fy;
+      }
+      const lk = nodeMap.get(we.lock);
+      if (t1 && lk) {
+        const dx = lk.x - t1.x, dy = lk.y - t1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const f = (dist - 90) * (kSpring * 0.6);
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        t1.vx += fx; t1.vy += fy;
+        lk.vx -= fx; lk.vy -= fy;
       }
     });
     nodes.forEach(n => {
@@ -390,10 +416,79 @@
       });
     }
 
+    // Draw Wait-For Graph Edges (WFG)
+    if (currentView === 'all' || currentView === 'wfg') {
+      DATA.wfg_edges.forEach(we => {
+        const t1 = nodeMap.get(we.from);
+        const t2 = nodeMap.get(we.to);
+        const lk = nodeMap.get(we.lock);
+        if (!t1 || !t2) return;
+
+        const hasReverse = DATA.wfg_edges.some(other => other.from === we.to && other.to === we.from);
+        const dx = t2.x - t1.x, dy = t2.y - t1.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const nx = -dy / dist, ny = dx / dist;
+        const curveOffset = hasReverse ? 38 : 18;
+        const cx = (t1.x + t2.x) / 2 + nx * curveOffset;
+        const cy = (t1.y + t2.y) / 2 + ny * curveOffset;
+
+        ctx.beginPath();
+        ctx.moveTo(t1.x, t1.y);
+        ctx.quadraticCurveTo(cx, cy, t2.x, t2.y);
+        if (we.is_timed) {
+          ctx.strokeStyle = `rgba(168, 85, 247, ${0.75 + 0.25 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.setLineDash([8, 4]);
+        } else {
+          ctx.strokeStyle = `rgba(239, 68, 68, ${0.8 + 0.2 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const tx = t2.x - cx, ty = t2.y - cy;
+        const angle = Math.atan2(ty, tx);
+        const arrowDist = t2.radius + 6;
+        const ax = t2.x - Math.cos(angle) * arrowDist;
+        const ay = t2.y - Math.sin(angle) * arrowDist;
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax - 11 * Math.cos(angle - 0.45), ay - 11 * Math.sin(angle - 0.45));
+        ctx.lineTo(ax - 11 * Math.cos(angle + 0.45), ay - 11 * Math.sin(angle + 0.45));
+        ctx.fill();
+
+        const lockLabel = lk ? lk.label : (we.lock_sym || we.lock_addr.slice(-4));
+        const labelText = `waits on ${lockLabel}`;
+        ctx.font = 'bold 9px monospace';
+        const txtWidth = ctx.measureText(labelText).width;
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = we.is_timed ? '#a855f7' : '#ef4444';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(cx - txtWidth / 2 - 5, cy - 8, txtWidth + 10, 16, 4);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = we.is_timed ? '#d8b4fe' : '#fca5a5';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, cx, cy);
+
+        if (lk) {
+          ctx.beginPath();
+          ctx.moveTo(t1.x, t1.y); ctx.lineTo(lk.x, lk.y);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+    }
+
     // Draw Nodes
     nodes.forEach(n => {
       if (currentView === 'log' && n.type === 'thread') return;
-      if (currentView === 'wfg' && n.type === 'lock' && n.id !== 'L_' + draggedNode?.waiting_for) return;
+      if (currentView === 'wfg' && n.type === 'lock' && !DATA.wfg_edges.some(we => we.lock === n.id)) return;
       ctx.save();
       if (n.type === 'lock') {
         if (n.is_gate) {
@@ -603,16 +698,41 @@
 
   function inspectNode(n) {
     const pane = document.getElementById('pane-inspector');
-    pane.innerHTML = `
-      <h3 style="font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;">${n.type.toUpperCase()} Inspector</h3>
-      <table class="prop-table">
-        <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
-        <tr><td class="key">Role</td><td class="val">${n.role || n.type}</td></tr>
-        ${n.fullAddr ? `<tr><td class="key">Address</td><td class="val">${n.fullAddr}</td></tr>` : ''}
-        ${n.sym ? `<tr><td class="key">Symbol</td><td class="val">${n.sym}</td></tr>` : ''}
-        ${n.tid !== undefined ? `<tr><td class="key">Thread ID</td><td class="val">${n.tid}</td></tr>` : ''}
-      </table>
-    `;
+    if (n.type === 'thread') {
+      const wfgOut = DATA.wfg_edges.filter(we => we.from === n.id);
+      const wfgIn = DATA.wfg_edges.filter(we => we.to === n.id);
+      let waitStatus = '<span style="color:#10b981; font-weight:700;">ACTIVE (RUNNING)</span>';
+      let extraRows = '';
+      if (wfgOut.length > 0) {
+        const we = wfgOut[0];
+        waitStatus = `<span style="color:#ef4444; font-weight:700;">BLOCKED WAITING (${we.is_timed ? 'TIMEDLOCK' : 'MUTEX'})</span>`;
+        extraRows += `<tr><td class="key">Waiting For</td><td class="val" style="color:#f87171;">${we.lock_sym} (${we.lock_addr})</td></tr>`;
+        extraRows += `<tr><td class="key">Blocked By</td><td class="val" style="color:#f87171;">${we.to}</td></tr>`;
+        extraRows += `<tr><td class="key">Wait Call-Site</td><td class="val">${we.site_sym}</td></tr>`;
+      }
+      if (wfgIn.length > 0) {
+        extraRows += `<tr><td class="key">Holding Lock For</td><td class="val">${wfgIn.map(we => we.from).join(', ')}</td></tr>`;
+      }
+      pane.innerHTML = `
+        <h3 style="font-size: 14px; font-weight: 700; color: #fb7185; margin-bottom: 8px;">THREAD INSPECTOR (${n.label})</h3>
+        <table class="prop-table">
+          <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
+          <tr><td class="key">Thread ID</td><td class="val">${n.tid}</td></tr>
+          <tr><td class="key">State</td><td class="val">${waitStatus}</td></tr>
+          ${extraRows}
+        </table>
+      `;
+    } else {
+      pane.innerHTML = `
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;">${n.type.toUpperCase()} Inspector</h3>
+        <table class="prop-table">
+          <tr><td class="key">Identifier</td><td class="val">${n.id}</td></tr>
+          <tr><td class="key">Role</td><td class="val">${n.role || n.type}</td></tr>
+          ${n.fullAddr ? `<tr><td class="key">Address</td><td class="val">${n.fullAddr}</td></tr>` : ''}
+          ${n.sym ? `<tr><td class="key">Symbol</td><td class="val">${n.sym}</td></tr>` : ''}
+        </table>
+      `;
+    }
     document.querySelector('.tab[data-target="pane-inspector"]').click();
   }
 
@@ -620,9 +740,47 @@
   function renderLedger() {
     const container = document.getElementById('pane-ledger');
     container.innerHTML = '';
+
+    if (DATA.wfg_edges && DATA.wfg_edges.length > 0) {
+      const wfgHeader = document.createElement('div');
+      wfgHeader.style = 'font-weight:700; color:#ef4444; margin-bottom:6px; font-size:12px; display:flex; align-items:center; gap:6px;';
+      wfgHeader.innerHTML = '<span>⚡ Live Wait-For Graph (WFG) Dependencies (' + DATA.wfg_edges.length + ')</span>';
+      container.appendChild(wfgHeader);
+      DATA.wfg_edges.forEach((we, idx) => {
+        const row = document.createElement('div');
+        row.className = 'ledger-row';
+        row.style.borderColor = we.is_timed ? '#a855f7' : '#ef4444';
+        row.style.background = 'rgba(239, 68, 68, 0.08)';
+        row.style.cursor = 'pointer';
+        row.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:700; color:${we.is_timed ? '#c084fc' : '#f87171'};
+            <span>WFG #${idx + 1}: ${we.from} &rarr; ${we.to}</span>
+            <span class="badge ${we.is_timed ? 'badge-timed' : 'badge-confirmed'}">${we.is_timed ? 'TIMEDLOCK' : 'WAITING'}</span>
+          </div>
+          <div style="color:var(--text-primary); font-size:11px;">Blocked On: <strong>${we.lock_sym}</strong> (${we.lock_addr.slice(-4)})</div>
+          <div style="color:var(--text-secondary); font-size:10px;">Wait Call-Site: ${we.site_sym}</div>
+          <div style="color:var(--text-muted); font-size:10px;">Held By: ${we.to}</div>
+        `;
+        row.addEventListener('click', () => {
+          const t1 = nodeMap.get(we.from);
+          if (t1) { cam.x = canvas.clientWidth / 2 - t1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - t1.y * cam.zoom; inspectNode(t1); }
+        });
+        container.appendChild(row);
+      });
+      const div = document.createElement('div');
+      div.style = 'border-top:1px solid var(--border); margin:12px 0;';
+      container.appendChild(div);
+    }
+
+    const logHeader = document.createElement('div');
+    logHeader.style = 'font-weight:700; color:var(--col-accent); margin-bottom:6px; font-size:12px;';
+    logHeader.textContent = 'Lock-Order Graph (LOG) Acquisitions (' + DATA.edges.length + ')';
+    container.appendChild(logHeader);
+
     DATA.edges.forEach((e, idx) => {
       const row = document.createElement('div');
       row.className = 'ledger-row';
+      row.style.cursor = 'pointer';
       row.innerHTML = `
         <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--col-accent);">
           <span>Edge #${idx + 1}: ${e.from.slice(-4)} &rarr; ${e.to.slice(-4)}</span>
@@ -631,6 +789,10 @@
         <div style="color:var(--text-secondary); font-size:10px;">Held: ${e.sym_from}</div>
         <div style="color:var(--text-secondary); font-size:10px;">Acquiring: ${e.sym_to}</div>
       `;
+      row.addEventListener('click', () => {
+        const l1 = nodeMap.get(e.from);
+        if (l1) { cam.x = canvas.clientWidth / 2 - l1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - l1.y * cam.zoom; inspectNode(l1); }
+      });
       container.appendChild(row);
     });
   }

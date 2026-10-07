@@ -555,7 +555,8 @@ void ds_report_export_html(const char *filename) {
     fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #f59e0b; border: 1px solid #fbbf24;\"></span> Gate Lock (Outer Guard)</div>\n", fp);
     fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #38bdf8;\"></span> Mutex Lock</div>\n", fp);
     fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #f43f5e; border-radius: 50%;\"></span> Execution Thread</div>\n", fp);
-    fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #ef4444;\"></span> Deadlock Cycle Edge</div>\n", fp);
+    fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #334155; height: 3px;\"></span> Lock-Order Edge (LOG)</div>\n", fp);
+    fputs("        <div class=\"legend-item\"><span class=\"legend-box\" style=\"background: #ef4444; height: 5px; border-radius: 2px;\"></span> Wait-For Edge (WFG Live Wait)</div>\n", fp);
     fputs("      </div>\n", fp);
     fputs("      <canvas id=\"graphCanvas\"></canvas>\n", fp);
     fputs("    </div>\n", fp);
@@ -637,6 +638,101 @@ void ds_report_export_html(const char *filename) {
     }
     fputs("    ],\n", fp);
 
+    /* Wait-For Graph (WFG) Edges */
+    fputs("    wfg_edges: [\n", fp);
+    typedef struct {
+        ThreadId from_tid;
+        ThreadId to_tid;
+        MutexId  lock;
+        char     site_sym[128];
+        int      wait_kind;
+        bool     is_timed;
+        bool     is_cycle;
+    } WfgExportEdge;
+
+    WfgExportEdge wfg_list[MAX_THREADS * 2];
+    int wfg_count = 0;
+
+    /* 1. From live thread wait state */
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (!atomic_load(&g_threads[i].active)) continue;
+        if (!atomic_load(&g_threads[i].is_waiting)) continue;
+        MutexId m = (MutexId)atomic_load(&g_threads[i].waiting_for);
+        if (!m) continue;
+
+        WaitKind wk = (WaitKind)atomic_load(&g_threads[i].wait_kind);
+        int l_idx = ds_get_or_create_lock_index(m);
+        ThreadId owner_tid = (ThreadId)-1;
+        if (l_idx >= 0) {
+            uintptr_t owner_val = atomic_load(&g_lock_owners[l_idx]);
+            if (owner_val > 0) {
+                owner_tid = (ThreadId)(owner_val - 1);
+            }
+        }
+
+        if (owner_tid != (ThreadId)-1 && owner_tid < MAX_THREADS && wfg_count < (int)(sizeof(wfg_list)/sizeof(wfg_list[0]))) {
+            WfgExportEdge *we = &wfg_list[wfg_count++];
+            we->from_tid = (ThreadId)i;
+            we->to_tid = owner_tid;
+            we->lock = m;
+            ds_symbolize_site(g_threads[i].wait_site, we->site_sym, sizeof(we->site_sym));
+            we->wait_kind = (int)wk;
+            we->is_timed = (wk == WK_TIMEDLOCK);
+            we->is_cycle = true;
+        }
+    }
+
+    /* 2. From g_findings (ACTIVE, ACTIVE_TIMED, CONFIRMED) */
+    for (int f = 0; f < g_finding_count; f++) {
+        if (g_findings[f].kind == FINDING_ACTIVE || 
+            g_findings[f].kind == FINDING_ACTIVE_TIMED || 
+            g_findings[f].kind == FINDING_CONFIRMED) {
+            const Cycle *c = &g_findings[f].cycle;
+            for (int k = 0; k < c->length; k++) {
+                ThreadId from_t = c->witnesses[k].tid;
+                ThreadId to_t = c->witnesses[(k + 1) % c->length].tid;
+                MutexId m = c->locks[(k + 1) % c->length];
+
+                bool exists = false;
+                for (int e = 0; e < wfg_count; e++) {
+                    if (wfg_list[e].from_tid == from_t && wfg_list[e].to_tid == to_t) {
+                        wfg_list[e].is_cycle = true;
+                        wfg_list[e].lock = m;
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists && wfg_count < (int)(sizeof(wfg_list)/sizeof(wfg_list[0]))) {
+                    WfgExportEdge *we = &wfg_list[wfg_count++];
+                    we->from_tid = from_t;
+                    we->to_tid = to_t;
+                    we->lock = m;
+                    ds_symbolize_site(c->witnesses[k].site_to, we->site_sym, sizeof(we->site_sym));
+                    we->wait_kind = (g_findings[f].kind == FINDING_ACTIVE_TIMED || c->contains_timed_wait) ? WK_TIMEDLOCK : WK_LOCK;
+                    we->is_timed = (we->wait_kind == WK_TIMEDLOCK);
+                    we->is_cycle = true;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < wfg_count; i++) {
+        char lock_sym[128];
+        ds_symbolize_site((void*)wfg_list[i].lock, lock_sym, sizeof(lock_sym));
+        fprintf(fp, "      { from: \"T_%u\", to: \"T_%u\", lock: \"L_0x%lx\", lock_addr: \"0x%lx\", lock_sym: \"%s\", site_sym: \"%s\", wait_kind: %d, is_timed: %s, is_cycle: %s }%s\n",
+                wfg_list[i].from_tid,
+                wfg_list[i].to_tid,
+                (unsigned long)wfg_list[i].lock,
+                (unsigned long)wfg_list[i].lock,
+                lock_sym,
+                wfg_list[i].site_sym,
+                wfg_list[i].wait_kind,
+                wfg_list[i].is_timed ? "true" : "false",
+                wfg_list[i].is_cycle ? "true" : "false",
+                (i + 1 < wfg_count) ? "," : "");
+    }
+    fputs("    ],\n", fp);
+
     /* Findings */
     fputs("    findings: [\n", fp);
     for (int i = 0; i < g_finding_count; i++) {
@@ -697,7 +793,7 @@ void ds_report_export_html(const char *filename) {
     fputs("    nodeMap.set(id, {\n", fp);
     fputs("      id: id, type: 'thread', label: 'Thread ' + t.tid, tid: t.tid,\n", fp);
     fputs("      x: (Math.random() - 0.5) * 260, y: (Math.random() - 0.5) * 260,\n", fp);
-    fputs("      vx: 0, vy: 0, radius: 20, mass: 1.2, waiting_for: t.waiting_for\n", fp);
+    fputs("      vx: 0, vy: 0, radius: 22, mass: 1.4, is_waiting: t.is_waiting, waiting_for: t.waiting_for, wait_kind: t.wait_kind\n", fp);
     fputs("    });\n", fp);
     fputs("  });\n", fp);
     fputs("  const nodes = Array.from(nodeMap.values());\n\n", fp);
@@ -743,6 +839,27 @@ void ds_report_export_html(const char *filename) {
     fputs("        const fx = (dx / dist) * f, fy = (dy / dist) * f;\n", fp);
     fputs("        n1.vx += fx; n1.vy += fy;\n", fp);
     fputs("        n2.vx -= fx; n2.vy -= fy;\n", fp);
+    fputs("      }\n", fp);
+    fputs("    });\n", fp);
+    fputs("    DATA.wfg_edges.forEach(we => {\n", fp);
+    fputs("      const t1 = nodeMap.get(we.from);\n", fp);
+    fputs("      const t2 = nodeMap.get(we.to);\n", fp);
+    fputs("      if (t1 && t2) {\n", fp);
+    fputs("        const dx = t2.x - t1.x, dy = t2.y - t1.y;\n", fp);
+    fputs("        const dist = Math.sqrt(dx * dx + dy * dy) || 1;\n", fp);
+    fputs("        const f = (dist - 140) * (kSpring * 0.8);\n", fp);
+    fputs("        const fx = (dx / dist) * f, fy = (dy / dist) * f;\n", fp);
+    fputs("        t1.vx += fx; t1.vy += fy;\n", fp);
+    fputs("        t2.vx -= fx; t2.vy -= fy;\n", fp);
+    fputs("      }\n", fp);
+    fputs("      const lk = nodeMap.get(we.lock);\n", fp);
+    fputs("      if (t1 && lk) {\n", fp);
+    fputs("        const dx = lk.x - t1.x, dy = lk.y - t1.y;\n", fp);
+    fputs("        const dist = Math.sqrt(dx * dx + dy * dy) || 1;\n", fp);
+    fputs("        const f = (dist - 90) * (kSpring * 0.6);\n", fp);
+    fputs("        const fx = (dx / dist) * f, fy = (dy / dist) * f;\n", fp);
+    fputs("        t1.vx += fx; t1.vy += fy;\n", fp);
+    fputs("        lk.vx -= fx; lk.vy -= fy;\n", fp);
     fputs("      }\n", fp);
     fputs("    });\n", fp);
     fputs("    nodes.forEach(n => {\n", fp);
@@ -823,10 +940,74 @@ void ds_report_export_html(const char *filename) {
     fputs("      });\n", fp);
     fputs("    }\n\n", fp);
 
+    fputs("    // Draw Wait-For Graph Edges (WFG)\n", fp);
+    fputs("    if (currentView === 'all' || currentView === 'wfg') {\n", fp);
+    fputs("      DATA.wfg_edges.forEach(we => {\n", fp);
+    fputs("        const t1 = nodeMap.get(we.from);\n", fp);
+    fputs("        const t2 = nodeMap.get(we.to);\n", fp);
+    fputs("        const lk = nodeMap.get(we.lock);\n", fp);
+    fputs("        if (!t1 || !t2) return;\n\n", fp);
+    fputs("        const hasReverse = DATA.wfg_edges.some(other => other.from === we.to && other.to === we.from);\n", fp);
+    fputs("        const dx = t2.x - t1.x, dy = t2.y - t1.y;\n", fp);
+    fputs("        const dist = Math.hypot(dx, dy) || 1;\n", fp);
+    fputs("        const nx = -dy / dist, ny = dx / dist;\n", fp);
+    fputs("        const curveOffset = hasReverse ? 38 : 18;\n", fp);
+    fputs("        const cx = (t1.x + t2.x) / 2 + nx * curveOffset;\n", fp);
+    fputs("        const cy = (t1.y + t2.y) / 2 + ny * curveOffset;\n\n", fp);
+    fputs("        ctx.beginPath();\n", fp);
+    fputs("        ctx.moveTo(t1.x, t1.y);\n", fp);
+    fputs("        ctx.quadraticCurveTo(cx, cy, t2.x, t2.y);\n", fp);
+    fputs("        if (we.is_timed) {\n", fp);
+    fputs("          ctx.strokeStyle = `rgba(168, 85, 247, ${0.75 + 0.25 * pulse})`;\n", fp);
+    fputs("          ctx.lineWidth = 3.5;\n", fp);
+    fputs("          ctx.setLineDash([8, 4]);\n", fp);
+    fputs("        } else {\n", fp);
+    fputs("          ctx.strokeStyle = `rgba(239, 68, 68, ${0.8 + 0.2 * pulse})`;\n", fp);
+    fputs("          ctx.lineWidth = 3.5;\n", fp);
+    fputs("          ctx.setLineDash([]);\n", fp);
+    fputs("        }\n", fp);
+    fputs("        ctx.stroke();\n", fp);
+    fputs("        ctx.setLineDash([]);\n\n", fp);
+    fputs("        const tx = t2.x - cx, ty = t2.y - cy;\n", fp);
+    fputs("        const angle = Math.atan2(ty, tx);\n", fp);
+    fputs("        const arrowDist = t2.radius + 6;\n", fp);
+    fputs("        const ax = t2.x - Math.cos(angle) * arrowDist;\n", fp);
+    fputs("        const ay = t2.y - Math.sin(angle) * arrowDist;\n", fp);
+    fputs("        ctx.fillStyle = ctx.strokeStyle;\n", fp);
+    fputs("        ctx.beginPath();\n", fp);
+    fputs("        ctx.moveTo(ax, ay);\n", fp);
+    fputs("        ctx.lineTo(ax - 11 * Math.cos(angle - 0.45), ay - 11 * Math.sin(angle - 0.45));\n", fp);
+    fputs("        ctx.lineTo(ax - 11 * Math.cos(angle + 0.45), ay - 11 * Math.sin(angle + 0.45));\n", fp);
+    fputs("        ctx.fill();\n\n", fp);
+    fputs("        const lockLabel = lk ? lk.label : (we.lock_sym || we.lock_addr.slice(-4));\n", fp);
+    fputs("        const labelText = `waits on ${lockLabel}`;\n", fp);
+    fputs("        ctx.font = 'bold 9px monospace';\n", fp);
+    fputs("        const txtWidth = ctx.measureText(labelText).width;\n", fp);
+    fputs("        ctx.fillStyle = '#0f172a';\n", fp);
+    fputs("        ctx.strokeStyle = we.is_timed ? '#a855f7' : '#ef4444';\n", fp);
+    fputs("        ctx.lineWidth = 1;\n", fp);
+    fputs("        ctx.beginPath();\n", fp);
+    fputs("        ctx.roundRect(cx - txtWidth / 2 - 5, cy - 8, txtWidth + 10, 16, 4);\n", fp);
+    fputs("        ctx.fill(); ctx.stroke();\n", fp);
+    fputs("        ctx.fillStyle = we.is_timed ? '#d8b4fe' : '#fca5a5';\n", fp);
+    fputs("        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';\n", fp);
+    fputs("        ctx.fillText(labelText, cx, cy);\n\n", fp);
+    fputs("        if (lk) {\n", fp);
+    fputs("          ctx.beginPath();\n", fp);
+    fputs("          ctx.moveTo(t1.x, t1.y); ctx.lineTo(lk.x, lk.y);\n", fp);
+    fputs("          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';\n", fp);
+    fputs("          ctx.lineWidth = 1.2;\n", fp);
+    fputs("          ctx.setLineDash([4, 4]);\n", fp);
+    fputs("          ctx.stroke();\n", fp);
+    fputs("          ctx.setLineDash([]);\n", fp);
+    fputs("        }\n", fp);
+    fputs("      });\n", fp);
+    fputs("    }\n\n", fp);
+
     fputs("    // Draw Nodes\n", fp);
     fputs("    nodes.forEach(n => {\n", fp);
     fputs("      if (currentView === 'log' && n.type === 'thread') return;\n", fp);
-    fputs("      if (currentView === 'wfg' && n.type === 'lock' && n.id !== 'L_' + draggedNode?.waiting_for) return;\n", fp);
+    fputs("      if (currentView === 'wfg' && n.type === 'lock' && !DATA.wfg_edges.some(we => we.lock === n.id)) return;\n", fp);
     fputs("      ctx.save();\n", fp);
     fputs("      if (n.type === 'lock') {\n", fp);
     fputs("        if (n.is_gate) {\n", fp);
@@ -1037,26 +1218,86 @@ void ds_report_export_html(const char *filename) {
 
     fputs("  function inspectNode(n) {\n", fp);
     fputs("    const pane = document.getElementById('pane-inspector');\n", fp);
-    fputs("    pane.innerHTML = `\n", fp);
-    fputs("      <h3 style=\"font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;\">${n.type.toUpperCase()} Inspector</h3>\n", fp);
-    fputs("      <table class=\"prop-table\">\n", fp);
-    fputs("        <tr><td class=\"key\">Identifier</td><td class=\"val\">${n.id}</td></tr>\n", fp);
-    fputs("        <tr><td class=\"key\">Role</td><td class=\"val\">${n.role || n.type}</td></tr>\n", fp);
-    fputs("        ${n.fullAddr ? `<tr><td class=\"key\">Address</td><td class=\"val\">${n.fullAddr}</td></tr>` : ''}\n", fp);
-    fputs("        ${n.sym ? `<tr><td class=\"key\">Symbol</td><td class=\"val\">${n.sym}</td></tr>` : ''}\n", fp);
-    fputs("        ${n.tid !== undefined ? `<tr><td class=\"key\">Thread ID</td><td class=\"val\">${n.tid}</td></tr>` : ''}\n", fp);
-    fputs("      </table>\n", fp);
-    fputs("    `;\n", fp);
+    fputs("    if (n.type === 'thread') {\n", fp);
+    fputs("      const wfgOut = DATA.wfg_edges.filter(we => we.from === n.id);\n", fp);
+    fputs("      const wfgIn = DATA.wfg_edges.filter(we => we.to === n.id);\n", fp);
+    fputs("      let waitStatus = '<span style=\"color:#10b981; font-weight:700;\">ACTIVE (RUNNING)</span>';\n", fp);
+    fputs("      let extraRows = '';\n", fp);
+    fputs("      if (wfgOut.length > 0) {\n", fp);
+    fputs("        const we = wfgOut[0];\n", fp);
+    fputs("        waitStatus = `<span style=\"color:#ef4444; font-weight:700;\">BLOCKED WAITING (${we.is_timed ? 'TIMEDLOCK' : 'MUTEX'})</span>`;\n", fp);
+    fputs("        extraRows += `<tr><td class=\"key\">Waiting For</td><td class=\"val\" style=\"color:#f87171;\">${we.lock_sym} (${we.lock_addr})</td></tr>`;\n", fp);
+    fputs("        extraRows += `<tr><td class=\"key\">Blocked By</td><td class=\"val\" style=\"color:#f87171;\">${we.to}</td></tr>`;\n", fp);
+    fputs("        extraRows += `<tr><td class=\"key\">Wait Call-Site</td><td class=\"val\">${we.site_sym}</td></tr>`;\n", fp);
+    fputs("      }\n", fp);
+    fputs("      if (wfgIn.length > 0) {\n", fp);
+    fputs("        extraRows += `<tr><td class=\"key\">Holding Lock For</td><td class=\"val\">${wfgIn.map(we => we.from).join(', ')}</td></tr>`;\n", fp);
+    fputs("      }\n", fp);
+    fputs("      pane.innerHTML = `\n", fp);
+    fputs("        <h3 style=\"font-size: 14px; font-weight: 700; color: #fb7185; margin-bottom: 8px;\">THREAD INSPECTOR (${n.label})</h3>\n", fp);
+    fputs("        <table class=\"prop-table\">\n", fp);
+    fputs("          <tr><td class=\"key\">Identifier</td><td class=\"val\">${n.id}</td></tr>\n", fp);
+    fputs("          <tr><td class=\"key\">Thread ID</td><td class=\"val\">${n.tid}</td></tr>\n", fp);
+    fputs("          <tr><td class=\"key\">State</td><td class=\"val\">${waitStatus}</td></tr>\n", fp);
+    fputs("          ${extraRows}\n", fp);
+    fputs("        </table>\n", fp);
+    fputs("      `;\n", fp);
+    fputs("    } else {\n", fp);
+    fputs("      pane.innerHTML = `\n", fp);
+    fputs("        <h3 style=\"font-size: 14px; font-weight: 700; color: var(--col-accent); margin-bottom: 8px;\">${n.type.toUpperCase()} Inspector</h3>\n", fp);
+    fputs("        <table class=\"prop-table\">\n", fp);
+    fputs("          <tr><td class=\"key\">Identifier</td><td class=\"val\">${n.id}</td></tr>\n", fp);
+    fputs("          <tr><td class=\"key\">Role</td><td class=\"val\">${n.role || n.type}</td></tr>\n", fp);
+    fputs("          ${n.fullAddr ? `<tr><td class=\"key\">Address</td><td class=\"val\">${n.fullAddr}</td></tr>` : ''}\n", fp);
+    fputs("          ${n.sym ? `<tr><td class=\"key\">Symbol</td><td class=\"val\">${n.sym}</td></tr>` : ''}\n", fp);
+    fputs("        </table>\n", fp);
+    fputs("      `;\n", fp);
+    fputs("    }\n", fp);
     fputs("    document.querySelector('.tab[data-target=\"pane-inspector\"]').click();\n", fp);
     fputs("  }\n\n", fp);
 
     fputs("  // Render Edge Ledger\n", fp);
     fputs("  function renderLedger() {\n", fp);
     fputs("    const container = document.getElementById('pane-ledger');\n", fp);
-    fputs("    container.innerHTML = '';\n", fp);
+    fputs("    container.innerHTML = '';\n\n", fp);
+    fputs("    if (DATA.wfg_edges && DATA.wfg_edges.length > 0) {\n", fp);
+    fputs("      const wfgHeader = document.createElement('div');\n", fp);
+    fputs("      wfgHeader.style = 'font-weight:700; color:#ef4444; margin-bottom:6px; font-size:12px; display:flex; align-items:center; gap:6px;';\n", fp);
+    fputs("      wfgHeader.innerHTML = '<span>⚡ Live Wait-For Graph (WFG) Dependencies (' + DATA.wfg_edges.length + ')</span>';\n", fp);
+    fputs("      container.appendChild(wfgHeader);\n", fp);
+    fputs("      DATA.wfg_edges.forEach((we, idx) => {\n", fp);
+    fputs("        const row = document.createElement('div');\n", fp);
+    fputs("        row.className = 'ledger-row';\n", fp);
+    fputs("        row.style.borderColor = we.is_timed ? '#a855f7' : '#ef4444';\n", fp);
+    fputs("        row.style.background = 'rgba(239, 68, 68, 0.08)';\n", fp);
+    fputs("        row.style.cursor = 'pointer';\n", fp);
+    fputs("        row.innerHTML = `\n", fp);
+    fputs("          <div style=\"display:flex; justify-content:space-between; font-weight:700; color:${we.is_timed ? '#c084fc' : '#f87171'};\n", fp);
+    fputs("            <span>WFG #${idx + 1}: ${we.from} &rarr; ${we.to}</span>\n", fp);
+    fputs("            <span class=\"badge ${we.is_timed ? 'badge-timed' : 'badge-confirmed'}\">${we.is_timed ? 'TIMEDLOCK' : 'WAITING'}</span>\n", fp);
+    fputs("          </div>\n", fp);
+    fputs("          <div style=\"color:var(--text-primary); font-size:11px;\">Blocked On: <strong>${we.lock_sym}</strong> (${we.lock_addr.slice(-4)})</div>\n", fp);
+    fputs("          <div style=\"color:var(--text-secondary); font-size:10px;\">Wait Call-Site: ${we.site_sym}</div>\n", fp);
+    fputs("          <div style=\"color:var(--text-muted); font-size:10px;\">Held By: ${we.to}</div>\n", fp);
+    fputs("        `;\n", fp);
+    fputs("        row.addEventListener('click', () => {\n", fp);
+    fputs("          const t1 = nodeMap.get(we.from);\n", fp);
+    fputs("          if (t1) { cam.x = canvas.clientWidth / 2 - t1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - t1.y * cam.zoom; inspectNode(t1); }\n", fp);
+    fputs("        });\n", fp);
+    fputs("        container.appendChild(row);\n", fp);
+    fputs("      });\n", fp);
+    fputs("      const div = document.createElement('div');\n", fp);
+    fputs("      div.style = 'border-top:1px solid var(--border); margin:12px 0;';\n", fp);
+    fputs("      container.appendChild(div);\n", fp);
+    fputs("    }\n\n", fp);
+    fputs("    const logHeader = document.createElement('div');\n", fp);
+    fputs("    logHeader.style = 'font-weight:700; color:var(--col-accent); margin-bottom:6px; font-size:12px;';\n", fp);
+    fputs("    logHeader.textContent = 'Lock-Order Graph (LOG) Acquisitions (' + DATA.edges.length + ')';\n", fp);
+    fputs("    container.appendChild(logHeader);\n\n", fp);
     fputs("    DATA.edges.forEach((e, idx) => {\n", fp);
     fputs("      const row = document.createElement('div');\n", fp);
     fputs("      row.className = 'ledger-row';\n", fp);
+    fputs("      row.style.cursor = 'pointer';\n", fp);
     fputs("      row.innerHTML = `\n", fp);
     fputs("        <div style=\"display:flex; justify-content:space-between; font-weight:600; color:var(--col-accent);\">\n", fp);
     fputs("          <span>Edge #${idx + 1}: ${e.from.slice(-4)} &rarr; ${e.to.slice(-4)}</span>\n", fp);
@@ -1065,6 +1306,10 @@ void ds_report_export_html(const char *filename) {
     fputs("        <div style=\"color:var(--text-secondary); font-size:10px;\">Held: ${e.sym_from}</div>\n", fp);
     fputs("        <div style=\"color:var(--text-secondary); font-size:10px;\">Acquiring: ${e.sym_to}</div>\n", fp);
     fputs("      `;\n", fp);
+    fputs("      row.addEventListener('click', () => {\n", fp);
+    fputs("        const l1 = nodeMap.get(e.from);\n", fp);
+    fputs("        if (l1) { cam.x = canvas.clientWidth / 2 - l1.x * cam.zoom; cam.y = canvas.clientHeight / 2 - l1.y * cam.zoom; inspectNode(l1); }\n", fp);
+    fputs("      });\n", fp);
     fputs("      container.appendChild(row);\n", fp);
     fputs("    });\n", fp);
     fputs("  }\n\n", fp);
