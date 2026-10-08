@@ -19,7 +19,7 @@ This study empirically benchmarks **DeadlockScope** against standard POSIX concu
 
 | Test Scenario | Lockdep (Raw LOG) | Helgrind (Valgrind) | ThreadSanitizer (TSan) | DeadlockScope (Ours) |
 |---|---|---|---|---|
-| `01_simple_deadlock` | ORDER INVERSION | CLEAN | CLEAN | **CONFIRMED** |
+| `01_simple_deadlock` | ORDER INVERSION | LOCK ORDER ERR | CLEAN | **CONFIRMED** |
 | `02_cycle_3thread` | ORDER INVERSION | CLEAN | CLEAN | **CONFIRMED** |
 | `03_potential_benign` | ORDER INVERSION | LOCK ORDER ERR | LOCK INVERSION | **POTENTIAL** |
 | `04_gate_lock` | ORDER INVERSION | LOCK ORDER ERR | LOCK INVERSION | **SUPPRESSED (gate-lock)** |
