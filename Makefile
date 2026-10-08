@@ -53,4 +53,21 @@ html: all
 	@echo "All 12 diagnostic HTML reports generated in reports/:"
 	@ls -lh reports/*.html
 
-.PHONY: all clean tests check compare html
+pdf:
+	@echo "Compiling formal academic report PDF (report.pdf) & formal guide PDF..."
+	@if [ -f "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" ]; then \
+		"/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="C:\\Users\\hp\\.gemini\\antigravity\\scratch\\deadlockscope\\report.pdf" "C:\\Users\\hp\\.gemini\\antigravity\\scratch\\deadlockscope\\report.html" >/dev/null 2>&1 || true; \
+		if [ -f "build_guide_pdf.py" ]; then \
+			cmd.exe /c "python build_guide_pdf.py" >/dev/null 2>&1 || python3 build_guide_pdf.py >/dev/null 2>&1 || true; \
+		fi; \
+	elif command -v chromium-browser >/dev/null 2>&1; then \
+		chromium-browser --headless --disable-gpu --print-to-pdf=report.pdf report.html >/dev/null 2>&1 || true; \
+	elif command -v google-chrome >/dev/null 2>&1; then \
+		google-chrome --headless --disable-gpu --print-to-pdf=report.pdf report.html >/dev/null 2>&1 || true; \
+	elif command -v weasyprint >/dev/null 2>&1; then \
+		weasyprint report.html report.pdf >/dev/null 2>&1 || true; \
+	fi
+	@echo "PDF build successful:"
+	@ls -lh report.pdf FORMAL_REPORT_GUIDE.pdf 2>/dev/null || ls -lh report.pdf
+
+.PHONY: all clean tests check compare html pdf

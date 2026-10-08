@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FORMAL REPORT GUIDE - DeadlockScope</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+  :root {
+    --primary: #0f172a;
+    --accent: #1d4ed8;
+    --text: #1e293b;
+    --border: #cbd5e1;
+    --bg-light: #f8fafc;
+    --crimson: #dc2626;
+    --amber: #d97706;
+    --emerald: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: var(--text);
+    background: #fff;
+    padding: 24px 32px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 8px;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 5px;
+    margin-top: 22px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--primary);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+  p {
+    margin-bottom: 10px;
+    text-align: justify;
+  }
+  ul, ol {
+    margin-left: 24px;
+    margin-bottom: 12px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 8px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: var(--bg-light);
+    color: var(--primary);
+    font-weight: 700;
+  }
+  tr:nth-child(even) {
+    background-color: #fbfcfe;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 8.5pt;
+    line-height: 1.45;
+    overflow-x: auto;
+    margin: 12px 0;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 9pt;
+    background: #f1f5f9;
+    color: #b91c1c;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+  .math {
+    font-family: "Cambria Math", "Times New Roman", serif;
+    font-style: italic;
+  }
+  .badge-required {
+    display: inline-block;
+    background: #fef2f2;
+    color: var(--crimson);
+    border: 1px solid #fecaca;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin: 0 2px;
+  }
+  .badge-citation {
+    display: inline-block;
+    background: #eff6ff;
+    color: var(--accent);
+    border: 1px solid #bfdbfe;
+    font-size: 8pt;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin: 0 2px;
+  }
+</style>
+</head>
+<body>
+<h1>FORMAL REPORT AUTHORING GUIDE: DEADLOCKSCOPE</h1>
+<p><strong>A Comprehensive Blueprint for Generating a 20–25 Page Academic Project Report</strong></p>
+<hr/>
+<h2>Document Overview and Purpose</h2>
+<p>This document is an exhaustive, rigorous, code-grounded architectural guide and report blueprint for <strong>DeadlockScope</strong>. It is designed to be provided directly to an AI language model or human author to produce a complete, publication-grade <strong>20–25 page formal university project report</strong> (such as a Master&#x27;s Thesis, Capstone Design Project Report, or Undergraduate Honors Thesis).</p>
+<h3>Mandatory Authoring Rules for the Report Generator</h3>
+<ol>
+<li><strong>Strict Codebase Fidelity:</strong> Every technical assertion regarding DeadlockScope must align with the actual C implementation in this repository. Never claim DeadlockScope implements features not present in the code.</li>
+<li><strong>No Data Fabrication:</strong> Never invent empirical numbers, benchmarks, execution times, or hardware setups. Where empirical numbers are required by an academic board but not strictly recorded in the repository test logs, insert the marker <code><span class="badge-required">[DATA REQUIRED: Description of required data]</span></code>.</li>
+<li><strong>Distinguish Project Behavior from Theory:</strong> Clearly separate DeadlockScope&#x27;s dynamic interception behavior from theoretical background concepts (such as generalized Coffman conditions, Lamport&#x27;s happens-before relation, or compiler-level binary rewriting).</li>
+<li><strong>Authentic Academic Citations:</strong> Suggest real, published research papers, books, and standards in concurrency, program analysis, and operating systems. Never invent fictitious authors, DOIs, or URLs. Where a citation is needed, tag with <code><span class="badge-citation">[CITATION REQUIRED: Target Topic / Suggested Literature]</span></code>.</li>
+<li><strong>Accurate Representation of Existing Tools:</strong> Accurately describe tools such as Linux Kernel <code>lockdep</code>, Valgrind <code>Helgrind</code>, and LLVM <code>ThreadSanitizer</code>. Explain why pure lock-order graph checking flags benign synchronization idioms (e.g., gate locks, sequential thread reentrancy, lifecycle barriers) as lock inversions due to architectural design choices, rather than making derogatory or unsupported claims that they &quot;fail.&quot;</li>
+<li><strong>Detailed Page Budgeting:</strong> Follow the structural page allocations provided below to ensure the generated report reaches the required 20–25 page length with academic depth.</li>
+</ol>
+<hr/>
+<h2>Global Page Budget and Structural Outline</h2>
+<div class="table-wrap"><table>
+<tr><th>Chapter / Section</th><th>Target Page Budget</th><th>Core Topic Coverage</th></tr>
+<tr><td><strong>Front Matter</strong></td><td>2–3 Pages</td><td>Title page, Certificate, Declaration, Acknowledgements, Abstract, TOC, Lists of Figures/Tables/Abbreviations</td></tr>
+<tr><td><strong>Chapter 1: Introduction</strong></td><td>2–3 Pages</td><td>Concurrency landscape, motivation, problem statement, objectives, scope, contributions, report outline</td></tr>
+<tr><td><strong>Chapter 2: Theoretical Foundations</strong></td><td>2–3 Pages</td><td>POSIX synchronization, Coffman conditions, LOG (<span class="math">\mathcal{G}_{LO}</span>) vs WFG (<span class="math">\mathcal{G}_{WF}</span>), happens-before, <code>LD_PRELOAD</code> interception</td></tr>
+<tr><td><strong>Chapter 3: Literature Review</strong></td><td>2–3 Pages</td><td>Static vs dynamic analysis, Linux Kernel Lockdep/GoodLock, Valgrind Helgrind, LLVM TSan, active testing / race provocation</td></tr>
+<tr><td><strong>Chapter 4: System Architecture</strong></td><td>2–3 Pages</td><td>High-level architecture, 8 subsystem decomposition, execution lifecycle, uninstrumented execution contexts</td></tr>
+<tr><td><strong>Chapter 5: Methodology &amp; Algorithms</strong></td><td>3–4 Pages</td><td>Dynamic symbol resolution, fast-path trylock probing, LOG cycle search, WFG pointer chase, two-tick hysteresis watchdog, condvar safety</td></tr>
+<tr><td><strong>Chapter 6: Credibility Filtering Logic</strong></td><td>2–3 Pages</td><td>Formal definitions, Theorems 1–3 with mathematical proofs (Gate-Lock, Same-Thread, Lifecycle), ablation levels L0–L3</td></tr>
+<tr><td><strong>Chapter 7: Implementation Details</strong></td><td>2–3 Pages</td><td>File-by-file code map, static memory architecture, reentrancy avoidance (<code>ds_in_hook</code>), address symbolization (<code>dladdr</code>), CLI design</td></tr>
+<tr><td><strong>Chapter 8: Experimental Evaluation</strong></td><td>3–4 Pages</td><td>Testbed configuration, the 12 benchmark test cases, automated test harness (<code>run_tests.sh</code>), terminal/DOT/HTML diagnostic artifacts</td></tr>
+<tr><td><strong>Chapter 9: Comparative Analysis &amp; Ablation</strong></td><td>2–3 Pages</td><td>Multi-tool comparative matrix (<code>results.md</code>), false-positive elimination study, multi-thread hang detection, runtime overhead</td></tr>
+<tr><td><strong>Chapter 10: Limitations &amp; Future Work</strong></td><td>1–2 Pages</td><td>Fixed-capacity array limits, lack of reader-writer lock/semaphore support, eBPF kernel tracing, automated deadlock recovery</td></tr>
+<tr><td><strong>Chapter 11: Conclusion</strong></td><td>1 Page</td><td>Summary of contributions, validation results, closing remarks</td></tr>
+<tr><td><strong>References &amp; Appendices</strong></td><td>2–3 Pages</td><td>Formal bibliography, CLI manual, C header interface specification, Graphviz DOT grammar, HTML report mechanics</td></tr>
+<tr><td><strong>Total Target</strong></td><td><strong>22–26 Pages</strong></td><td><strong>Full University Project Report</strong></td></tr>
+</table></div>
+<hr/>
+<h2>Front Matter Blueprint</h2>
+<h3>1. Title Page / Cover Sheet</h3>
+<ul>
+<li><strong>Project Title:</strong> <em>DeadlockScope: A Non-Invasive Runtime System for Dynamic Concurrency Diagnostics, Credibility Filtering, and Closed-Loop Race Provocation in POSIX Threads</em></li>
+<li><strong>Candidate Details:</strong> <code><span class="badge-required">[DATA REQUIRED: Student Full Name, Student Roll / Registration Number, Degree Name, e.g., Master of Technology / Bachelor of Science in Computer Science and Engineering]</span></code></li>
+<li><strong>Institution Details:</strong> <code><span class="badge-required">[DATA REQUIRED: Department Name, Faculty of Computer Science / Engineering, University Name, City, Country]</span></code></li>
+<li><strong>Supervision Details:</strong> <code><span class="badge-required">[DATA REQUIRED: Faculty Supervisor Name, Academic Title, Department]</span></code></li>
+<li><strong>Date:</strong> <code><span class="badge-required">[DATA REQUIRED: Month, Year, e.g., October 2026]</span></code></li>
+</ul>
+<h3>2. Formal Certificate of Recommendation</h3>
+<ul>
+<li>Formal text certifying that the project entitled <em>&quot;DeadlockScope: A Non-Invasive Runtime System for Dynamic Concurrency Diagnostics...&quot;</em> is a bona fide record of work carried out by <code><span class="badge-required">[DATA REQUIRED: Student Name]</span></code> under the supervision of <code><span class="badge-required">[DATA REQUIRED: Supervisor Name]</span></code> in partial fulfillment of the requirements for the degree.</li>
+<li>Signature blocks for: Supervisor, External Examiner, Head of Department.</li>
+</ul>
+<h3>3. Student Declaration of Originality</h3>
+<ul>
+<li>Explicit declaration stating that the report represents the student&#x27;s own work, has not been submitted elsewhere for any academic degree, and that all literature, third-party libraries, and conceptual foundations have been formally cited.</li>
+</ul>
+<h3>4. Acknowledgements</h3>
+<ul>
+<li>Template expressing gratitude to project supervisor, department faculty, systems laboratory staff, and the open-source Linux systems engineering community.</li>
+</ul>
+<h3>5. Abstract</h3>
+<ul>
+<li><strong>Context:</strong> Concurrent multithreaded systems in C/POSIX rely heavily on mutual exclusion locks (<code>pthread_mutex_t</code>), where lock acquisition order violations frequently result in catastrophic deadlocks.</li>
+<li><strong>Problem:</strong> Existing dynamic detectors face a trilemma: static lock-order graph validators (such as Linux Kernel <code>lockdep</code> or Valgrind <code>Helgrind</code>) produce excessive false alarms on benign idioms (such as gate-guarded critical sections, single-thread sequential ordering, and thread lifecycle barriers); runtime sanitizers (such as LLVM <code>ThreadSanitizer</code>) impose high overhead and miss multi-thread circular freezes; and passive monitors cannot provoke latent timing-dependent deadlocks.</li>
+<li><strong>Solution:</strong> This project presents <strong>DeadlockScope</strong>, a lightweight, non-invasive runtime dynamic analysis and verification system for Linux x86_64 POSIX threads. Deployed transparently via dynamic linker interception (<code>LD_PRELOAD</code>), DeadlockScope decouples predictive lock-order tracking (Lock-Order Graph, LOG) from live blocked thread states (Wait-For Graph, WFG), formalizes three-tier set-theoretic credibility filtering to mathematically prune false positives, and integrates a closed-loop provocation engine that injects targeted microsecond delays around suspected locks to turn latent inversions into reproducible deadlocks.</li>
+<li><strong>Results:</strong> Evaluated across a comprehensive 12-scenario POSIX benchmark suite, DeadlockScope achieves a 100% true deadlock detection rate, reduces false-positive alarms to 0.0% on benign synchronization idioms, distinguishes self-resolving timed waits (<code>ACTIVE_TIMED</code>), and operates with low runtime overhead without requiring application recompilation or source code modification.</li>
+</ul>
+<h3>6. Table of Contents, Lists of Figures, Tables, and Abbreviations</h3>
+<ul>
+<li><strong>Suggested Abbreviations:</strong></li>
+</ul>
+<p>  - <code>LOG</code>: Lock-Order Graph (<span class="math">\mathcal{G}_{LO}</span>)</p>
+<p>  - <code>WFG</code>: Wait-For Graph (<span class="math">\mathcal{G}_{WF}</span>)</p>
+<p>  - <code>POSIX</code>: Portable Operating System Interface</p>
+<p>  - <code>TSan</code>: ThreadSanitizer</p>
+<p>  - <code>TLS</code>: Thread-Local Storage</p>
+<p>  - <code>SCC</code>: Strongly Connected Component</p>
+<p>  - <code>DFS</code>: Depth-First Search</p>
+<p>  - <code>HB</code>: Happens-Before relation (<span class="math">\prec_{HB}</span>)</p>
+<p>  - <code>ABI</code>: Application Binary Interface</p>
+<p>  - <code>RTLD</code>: Run-Time Link-Editor</p>
+<hr/>
+<h2>Chapter 1: Introduction and Problem Formulation</h2>
+<h3>1.1 Context and Technical Landscape</h3>
+<ul>
+<li><strong>Concurrency in Systems Programming:</strong> Concurrency is fundamental to operating system kernels, storage engines, network proxies, and database runtimes. POSIX Threads (<code>pthreads</code>) remain the industry standard execution model for high-performance systems in C on POSIX/Linux platforms.</li>
+<li><strong>Mutual Exclusion &amp; Locks:</strong> Because concurrent threads share address spaces, critical sections must be serialized using synchronization primitives, predominantly <code>pthread_mutex_t</code>.</li>
+<li><strong>The Deadlock Threat:</strong> An improper sequence of lock acquisitions across multiple execution threads can produce a circular wait state where threads block indefinitely, causing system hangs and denial of service.</li>
+</ul>
+<h3>1.2 Motivation</h3>
+<ul>
+<li><strong>The Heisenbug Dilemma:</strong> Deadlocks in production software are often timing-dependent &quot;Heisenbugs.&quot; They occur only under specific, rare thread scheduling interleavings. During local testing or unit test runs, slight scheduling variations can prevent race conditions from manifesting, allowing defective code to pass into production.</li>
+<li><strong>The Need for Non-Invasiveness:</strong> Requiring developers to recompile their entire software stack with proprietary compiler flags or instrumentation toolchains is often impractical for legacy codebases, binary-only libraries, or continuous deployment pipelines.</li>
+</ul>
+<h3>1.3 Problem Statement: The Analysis Trilemma</h3>
+<p>Dynamic concurrency analysis in existing systems software suffers from three major flaws:</p>
+<ol>
+<li><strong>False-Positive Fatigue:</strong> Traditional lock-order graph checkers record any occurrence of two locks acquired in opposite orders (<span class="math">M_A \to M_B</span> and <span class="math">M_B \to M_A</span>) as a critical deadlock risk. However, real-world systems routinely employ protective patterns that render deadlocks mathematically impossible:</li>
+</ol>
+<p>   - <em>Gate Locks:</em> An outer mutex <span class="math">G</span> encloses both critical sections, serializing their execution.</p>
+<p>   - <em>Sequential Single-Thread Phases:</em> The same thread acquires locks in different orders at different points in its execution lifecycle.</p>
+<p>   - <em>Lifecycle Ordering:</em> A thread terminates and is joined (<code>pthread_join</code>) before the second thread is spawned, establishing a strict temporal causal barrier.</p>
+<p>   Existing tools (including pure lock-order tracking and general dynamic race detectors) frequently issue false-positive warnings on these patterns, fatiguing engineers.</p>
+<ol>
+<li><strong>Diagnostic Amnesia During Live Hangs:</strong> When a true circular wait occurs, all participating threads freeze permanently in kernel space. Because the program never reaches <code>exit()</code> or <code>return</code>, dynamic library cleanup routines (<code>atexit()</code>, <code>__attribute__((destructor))</code>) never execute. Traditional user-space tools hang silently alongside the target process without emitting diagnostic reports or stack traces.</li>
+<li><strong>Passive Observation Blindness:</strong> Passive monitors only observe whatever thread interleavings happen to occur naturally. If the timing window for a deadlock is narrow (e.g., a few microseconds), passive monitors will never observe the failure during test execution.</li>
+</ol>
+<h3>1.4 Project Objectives</h3>
+<p>The engineering and theoretical objectives of DeadlockScope are:</p>
+<ol>
+<li><strong>Zero-Recompilation Deployment:</strong> Intercept POSIX synchronization routines transparently at runtime using standard dynamic library preloading (<code>LD_PRELOAD</code>) without requiring source modification.</li>
+<li><strong>Dual-Graph Decoupling:</strong> Decouple historical predictive lock acquisition order (<span class="math">\mathcal{G}_{LO}</span>) from real-time blocked thread states (<span class="math">\mathcal{G}_{WF}</span>) to support a multi-tier classification taxonomy (<code>POTENTIAL</code>, <code>SUPPRESSED</code>, <code>ACTIVE</code>, <code>ACTIVE_TIMED</code>, <code>CONFIRMED</code>).</li>
+<li><strong>Sound Credibility Filtering:</strong> Develop and implement formal filtering algorithms to mathematically prove when candidate lock-order inversions cannot deadlock, eliminating false alarms.</li>
+<li><strong>Autonomous Real-Time Diagnostics:</strong> Implement a decoupled, lock-free background Watchdog daemon that detects live unyielding thread freezes, confirms stability across time ticks, and emits symbolized diagnostic traces before process termination.</li>
+<li><strong>Closed-Loop Provocation:</strong> Implement an active timing perturbation engine that uses predictive graph analysis to inject microsecond delays on candidate locks, intentionally widening race windows to validate latent deadlocks.</li>
+<li><strong>Zero-Dependency Reporting:</strong> Generate symbolized terminal diagnostics, dual-cluster Graphviz files, and self-contained, interactive HTML diagnostic dashboards with force-directed physics graphs.</li>
+</ol>
+<h3>1.5 Scope and Deliverables</h3>
+<ul>
+<li><strong>In Scope:</strong> POSIX thread mutexes (<code>pthread_mutex_lock</code>, <code>trylock</code>, <code>timedlock</code>, <code>unlock</code>, <code>init</code>, <code>destroy</code>), thread lifecycle routines (<code>pthread_create</code>, <code>pthread_join</code>), and condition variables (<code>pthread_cond_wait</code>, <code>timedwait</code>) on Linux x86_64.</li>
+<li><strong>Out of Scope (Explicit Boundaries):</strong> Distributed synchronization across networked nodes, inter-process shared memory mutexes (<code>PTHREAD_PROCESS_SHARED</code>), reader-writer locks (<code>pthread_rwlock_t</code>), POSIX semaphores (<code>sem_t</code>), and lock-free atomic algorithms.</li>
+<li><strong>Primary Deliverables:</strong></li>
+</ul>
+<p>  - Shared library runtime: <code>libdeadlockscope.so</code></p>
+<p>  - User CLI runner: <code>cli/deadlock-scope</code></p>
+<p>  - 12 comprehensive benchmark scenarios: <code>tests/01_<em>.c</code> through <code>tests/12_</em>.c</code></p>
+<p>  - Automated test harness: <code>tests/run_tests.sh</code></p>
+<p>  - Cross-tool benchmarking harness: <code>tests/compare/run_comparison.sh</code></p>
+<p>  - Interactive HTML report suite: <code>reports/*.html</code></p>
+<h3>1.6 Report Organization Roadmap</h3>
+<p>Briefly preview Chapters 2 through 11, setting expectations for theory, architecture, algorithms, implementation, experiments, and conclusions.</p>
+<hr/>
+<h2>Chapter 2: Theoretical Foundations and Background</h2>
+<h3>2.1 POSIX Synchronization Semantics</h3>
+<ul>
+<li><strong><code>pthread_mutex_t</code> Mechanics:</strong> Explain the mutual exclusion guarantee, the POSIX specification [IEEE Std 1003.1], and lock types (<code>PTHREAD_MUTEX_NORMAL</code>, <code>PTHREAD_MUTEX_ERRORCHECK</code>, <code>PTHREAD_MUTEX_RECURSIVE</code>).</li>
+<li><strong>Condition Variables (<code>pthread_cond_t</code>):</strong> Detail the semantics of <code>pthread_cond_wait</code>. Highlight that it atomically releases the associated mutex while enqueueing the calling thread, and re-acquires the mutex before returning. Explain why naive lock-tracking tools corrupt their held-lock tables if they fail to track this temporary release.</li>
+</ul>
+<h3>2.2 Coffman Conditions for Deadlock</h3>
+<p>Formulate the four necessary and sufficient conditions for resource deadlocks [Coffman et al., 1971]:</p>
+<ol>
+<li><strong>Mutual Exclusion:</strong> <span class="math">\forall M \in \mathcal{M}</span>, at most one thread <span class="math">T \in \mathcal{T}</span> can hold <span class="math">M</span> at time <span class="math">t</span>.</li>
+<li><strong>Hold and Wait:</strong> <span class="math">\exists T \in \mathcal{T}</span> such that <span class="math">M_A \in \mathcal{H}(T)</span> and <span class="math">T</span> requests <span class="math">M_B \notin \mathcal{H}(T)</span>.</li>
+<li><strong>No Preemption:</strong> <span class="math">\forall M \in \mathcal{H}(T)</span>, <span class="math">M</span> cannot be forcibly revoked; it can only be released voluntarily by <span class="math">T</span>.</li>
+<li><strong>Circular Wait:</strong> <span class="math">\exists \{T_1, T_2, \dots, T_k\} \subseteq \mathcal{T}</span> such that <span class="math">T_i</span> is blocked waiting for a resource held by <span class="math">T_{(i \bmod k) + 1}</span>.</li>
+</ol>
+<h3>2.3 Graph-Theoretic Formulations: LOG vs. WFG</h3>
+<p>Formally define and contrast the two synchronization graphs:</p>
+<ul>
+<li><strong>Lock-Order Graph (<span class="math">\mathcal{G}_{LO} = (\mathcal{M}, \mathcal{E}_{LO})</span>):</strong></li>
+</ul>
+<p>  - Vertices are allocated mutexes <span class="math">\mathcal{M}</span>.</p>
+<p>  - A directed edge <span class="math">(M_A, M_B) \in \mathcal{E}_{LO}</span> exists if any thread acquires <span class="math">M_B</span> while already holding <span class="math">M_A</span>.</p>
+<p>  - It is an <em>accumulative historical graph</em>. Edges persist for the lifetime of the process (unless the mutex is destroyed).</p>
+<p>  - A cycle in <span class="math">\mathcal{G}_{LO}</span> indicates a <em>potential</em> structural inversion, but does <em>not</em> prove that a circular wait ever occurred simultaneously.</p>
+<ul>
+<li><strong>Wait-For Graph (<span class="math">\mathcal{G}_{WF} = (\mathcal{T}, \mathcal{E}_{WF})</span>):</strong></li>
+</ul>
+<p>  - Vertices are active threads <span class="math">\mathcal{T}</span>.</p>
+<p>  - A directed edge <span class="math">(T_i, T_j) \in \mathcal{E}_{WF}</span> exists if and only if <span class="math">T_i</span> is currently blocked waiting for a mutex held by <span class="math">T_j</span>.</p>
+<p>  - It is an <em>instantaneous, ephemeral graph</em>. Edges appear when threads block and vanish when locks are granted.</p>
+<p>  - In mutual exclusion locks, each thread can block on at most one lock at any moment <span class="math">\implies</span> out-degree <span class="math">d^+(T_i) \le 1</span>.</p>
+<p>  - A cycle in <span class="math">\mathcal{G}_{WF}</span> represents an <em>active, live deadlock</em>.</p>
+<h3>2.4 Causal Ordering and Happens-Before Relation</h3>
+<ul>
+<li>Define Lamport&#x27;s Happens-Before relation (<span class="math">\prec_{HB}</span>) [Lamport, 1978].</li>
+<li>Explain how thread synchronization barriers establish causal order:</li>
+</ul>
+<p>  - Thread creation: <span class="math">T_{\text{parent}}.\text{spawn}(T_{\text{child}}) \prec_{HB} T_{\text{child}}.\text{first\_instruction}</span>.</p>
+<p>  - Thread termination &amp; join: <span class="math">T_{\text{child}}.\text{last\_instruction} \prec_{HB} T_{\text{parent}}.\text{join}(T_{\text{child}})</span>.</p>
+<ul>
+<li>State the fundamental principle: If all events of thread <span class="math">T_1</span> happen-before all events of thread <span class="math">T_2</span> (<span class="math">T_1 \prec_{HB} T_2</span>), then <span class="math">T_1</span> and <span class="math">T_2</span> cannot execute concurrently, and cannot participate in a simultaneous circular wait.</li>
+</ul>
+<h3>2.5 Dynamic Binary Interception Theory</h3>
+<ul>
+<li><strong>Dynamic Linker Architecture:</strong> Review how the GNU C Library (glibc) dynamic linker (<code>ld-linux.so</code>) resolves external symbols at runtime.</li>
+<li><strong><code>LD_PRELOAD</code> Mechanism:</strong> Placing a shared library path in <code>LD_PRELOAD</code> forces the runtime linker to bind unresolved symbols to the interposition library prior to standard libraries (<code>libc.so</code>, <code>libpthread.so</code>).</li>
+<li><strong>Chaining to Original Primitives (<code>dlsym(RTLD_NEXT, ...)</code>):</strong> Explain how <code>dlsym</code> retrieves the address of the next occurrence of a symbol in the shared object search order.</li>
+<li><strong>Reentrancy and Heap Allocation Dangers:</strong> Detail the severe hazards of calling <code>malloc()</code> or <code>printf()</code> inside intercepted synchronization hooks: glibc&#x27;s memory allocator acquires internal arena mutexes, which would recursively trigger the interceptor, leading to immediate infinite recursion and stack exhaustion.</li>
+</ul>
+<hr/>
+<h2>Chapter 3: Literature Review and Related Approaches</h2>
+<h3>3.1 Taxonomy of Concurrency Analysis Techniques</h3>
+<p>Provide a structured comparative taxonomy:</p>
+<ol>
+<li><strong>Static Program Analysis:</strong> AST scanning, abstract interpretation, lock-order inference (e.g., Clang Thread Safety Analysis, Coverity).</li>
+</ol>
+<p>   - <em>Strengths:</em> Exhaustive path coverage, compile-time feedback.</p>
+<p>   - <em>Weaknesses:</em> Inability to resolve dynamic pointer aliases, false-alarm deluge on conditional locks, no runtime timing context.</p>
+<ol>
+<li><strong>Dynamic Binary Instrumentation (DBI):</strong> Heavyweight instruction rewriting and shadow memory (e.g., Valgrind Helgrind).</li>
+</ol>
+<p>   - <em>Strengths:</em> Complete execution visibility at machine code level.</p>
+<p>   - <em>Weaknesses:</em> Severe runtime slowdown (10x–50x), memory overhead, altered thread interleaving dynamics.</p>
+<ol>
+<li><strong>Compiler-Instrumented Sanitizers:</strong> Compiler pass injecting checks at memory accesses and synchronization points (e.g., LLVM ThreadSanitizer).</li>
+</ol>
+<p>   - <em>Strengths:</em> High race detection fidelity, integrated into modern build systems.</p>
+<p>   - <em>Weaknesses:</em> Requires source recompilation, 2x–5x memory/CPU overhead, primary focus on data races rather than multi-thread circular hangs.</p>
+<ol>
+<li><strong>Dynamic Library Interposition:</strong> Interception of API entry points via <code>LD_PRELOAD</code> (e.g., DeadlockScope).</li>
+</ol>
+<p>   - <em>Strengths:</em> Zero source modification, lightweight, targets synchronization primitives directly.</p>
+<p>   - <em>Weaknesses:</em> Cannot observe raw memory instructions (only explicit synchronization API calls).</p>
+<h3>3.2 Lock-Order Analysis and the Linux Kernel <code>lockdep</code></h3>
+<ul>
+<li><strong>Architecture of <code>lockdep</code> [Molnar, 2006]:</strong> Explain that <code>lockdep</code> was created by Ingo Molnar to validate lock hierarchies in the Linux kernel. It groups locks into <em>lock classes</em> and tracks direct dependencies (<span class="math">A \to B</span>) across the entire operating system.</li>
+<li><strong>Design Philosophy vs. User-Space Reality:</strong></li>
+</ul>
+<p>  - <code>lockdep</code> enforces a strict global acquisition order across the entire kernel. In kernel development, acquiring locks in inconsistent order—even if currently protected by an outer lock—is treated as an architectural defect because future refactoring might remove the outer guard.</p>
+<p>  - When translated to user-space applications (e.g., <code>liblockdep</code>), this design philosophy results in high false-positive rates on common user-space idioms like gate locks, separate sequential thread phases, and lifecycle-separated tasks.</p>
+<p>  - Furthermore, <code>lockdep</code> is an offline/passive checker; it does not detect when user-space threads are actively frozen, nor does it distinguish between permanent deadlocks and timed waits.</p>
+<ul>
+<li><strong>The GoodLock Algorithm [Bensalem &amp; Havelund, 2005]:</strong> Describe the foundational academic algorithm for runtime lock-order graph cycle detection. Explain how GoodLock constructs lock trees and analyzes pairwise inversions, but similarly struggles with benign gate-locked patterns without multi-witness set intersection.</li>
+</ul>
+<h3>3.3 Dynamic Sanitizers: Valgrind Helgrind and ThreadSanitizer</h3>
+<ul>
+<li><strong>Valgrind Helgrind [Nethercote &amp; Seward, 2007]:</strong></li>
+</ul>
+<p>  - Uses binary translation to track shadow memory and intercept POSIX primitives.</p>
+<p>  - Checks for lock-order inversions using a directed graph.</p>
+<p>  - Flaws in practice: Extreme overhead (20x–50x slowdown), reports false-positive lock order violations on gate locks and <code>trylock</code> recovery loops, and hangs when target programs deadlock.</p>
+<ul>
+<li><strong>LLVM ThreadSanitizer (TSan v2) [Serebryany &amp; Iskhodzhanov, 2009]:</strong></li>
+</ul>
+<p>  - Instruments memory reads/writes and atomic/lock operations at compile time.</p>
+<p>  - Employs vector clocks to detect data races.</p>
+<p>  - Includes a lock-order inversion checker (<code>lock-order-inversion</code>).</p>
+<p>  - Flaws in practice: Focuses primarily on data races; on multi-thread circular hangs (e.g., 3-thread cycles), if the program blocks permanently, TSan&#x27;s diagnostic reporting may not execute because the process never terminates.</p>
+<h3>3.4 Active Testing and Concurrency Provocation</h3>
+<ul>
+<li><strong>The Limits of Passive Testing:</strong> Passive testing relies entirely on the operating system scheduler&#x27;s nondeterministic decisions.</li>
+<li><strong>Prior Work in Active Testing:</strong></li>
+</ul>
+<p>  - <em>DeadlockFuzz / MagicFuzzer [Joshi, Park, Sen, &amp; Naik, 2009]:</em> Academic frameworks that use randomized thread stalling to provoke deadlocks.</p>
+<p>  - <em>PCT (Probabilistic Concurrency Testing) [Burckhardt et al., 2010]:</em> Inserts priority changes to guarantee finding bugs within a bounded depth.</p>
+<ul>
+<li><strong>DeadlockScope&#x27;s Provocation Strategy:</strong> Unlike purely randomized fuzzers that stall threads indiscriminately, DeadlockScope uses a <strong>closed-loop targeted strategy</strong>: it only injects micro-delays around mutexes that have already been identified as constituent members of a predicted <code>POTENTIAL</code> cycle in the Lock-Order Graph.</li>
+</ul>
+<h3>3.5 Comparative Gap Analysis</h3>
+<p>Construct a clear summary table comparing capabilities across tools:</p>
+<div class="table-wrap"><table>
+<tr><th>Feature / Dimension</th><th>Static Analyzers</th><th>Linux <code>lockdep</code></th><th>Valgrind <code>Helgrind</code></th><th>LLVM <code>TSan</code></th><th><strong>DeadlockScope</strong></th></tr>
+<tr><td>Recompilation Needed</td><td>Yes</td><td>No (if liblockdep)</td><td>No</td><td>Yes (<code>-fsanitize=thread</code>)</td><td><strong>No (<code>LD_PRELOAD</code>)</strong></td></tr>
+<tr><td>Runtime Overhead</td><td>None (Compile time)</td><td>Low (&lt; 5%)</td><td>Extreme (10x–50x)</td><td>Moderate (2x–5x)</td><td><strong>Low (&lt; 25%)</strong></td></tr>
+<tr><td>Live Freeze Detection</td><td>None</td><td>None</td><td>None (Hangs)</td><td>None (Hangs)</td><td><strong>Yes (Watchdog Daemon)</strong></td></tr>
+<tr><td>Gate-Lock Filtering</td><td>Poor</td><td>None (Warns)</td><td>None (Warns)</td><td>None (Warns)</td><td><strong>Yes (Theorem 1)</strong></td></tr>
+<tr><td>Same-Thread Filtering</td><td>Variable</td><td>None (Warns)</td><td>None (Warns)</td><td>None (Warns)</td><td><strong>Yes (Theorem 2)</strong></td></tr>
+<tr><td>Lifecycle Filtering</td><td>None</td><td>None (Warns)</td><td>None (Warns)</td><td>None (Warns)</td><td><strong>Yes (Theorem 3)</strong></td></tr>
+<tr><td>Timed Wait Classification</td><td>None</td><td>None</td><td>None</td><td>None</td><td><strong>Yes (<code>ACTIVE_TIMED</code>)</strong></td></tr>
+<tr><td>Closed-Loop Provocation</td><td>None</td><td>None</td><td>None</td><td>None</td><td><strong>Yes (<code>--stress</code>)</strong></td></tr>
+<tr><td>Interactive Visualization</td><td>None</td><td>Text (dmesg)</td><td>Text log</td><td>Text stderr</td><td><strong>Yes (HTML &amp; DOT)</strong></td></tr>
+</table></div>
+<hr/>
+<h2>Chapter 4: DeadlockScope System Architecture</h2>
+<h3>4.1 Architectural Overview and Design Principles</h3>
+<p>DeadlockScope is engineered around four core design principles:</p>
+<ol>
+<li><strong>Transparency:</strong> Operates on standard ELF dynamically linked binaries without source code changes or recompilation.</li>
+<li><strong>Zero Dynamic Allocation in Critical Paths:</strong> Avoids all heap allocations (<code>malloc</code>, <code>free</code>) inside intercepted synchronization hooks to guarantee memory safety and prevent allocator deadlocks.</li>
+<li><strong>Decoupled Dual-Graph Model:</strong> Separates historical lock-order tracking (predictive) from live thread wait-state tracking (confirmatory).</li>
+<li><strong>Autonomous Operation:</strong> Runs a dedicated, non-instrumented monitoring thread to diagnose frozen processes even when application worker threads are completely blocked.</li>
+</ol>
+<h3>4.2 System Architecture Block Diagram</h3>
+<p>Create a clear ASCII or Mermaid system architecture diagram depicting the flow:</p>
+<pre><code class="language-">
++-----------------------------------------------------------------------------+
+|                              TARGET APPLICATION                             |
+|        (Worker Threads executing pthread_mutex_*, pthread_create/join)      |
++-----------------------------------------------------------------------------+
+                                      |
+                      LD_PRELOAD Dynamic Linker Interception
+                                      v
++-----------------------------------------------------------------------------+
+|                     INTERCEPTION LAYER (interceptor.c)                      |
+|  - Real symbol resolution via dlsym(RTLD_NEXT, ...)                         |
+|  - Thread-Local reentrancy guard (__thread int ds_in_hook)                  |
+|  - Fast-path probing via trylock; attempt-time logging on contention        |
+|  - Condition variable held-set release &amp; restore tracking                   |
++-----------------------------------------------------------------------------+
+         |                                                   |
+         | Updates Held Sets &amp; Logs Attempts                 | Updates Live Wait States
+         v                                                   v
++---------------------------------------+   +---------------------------------+
+|      LOCK-ORDER GRAPH (LOG)           |   |      WAIT-FOR GRAPH (WFG)       |
+|            (lock_graph.c)             |   |         (wait_graph.c)          |
+|  - Static edge array (MAX_EDGES=1024) |   |  - Atomic thread wait slots     |
+|  - Witness metadata &amp; held stacks     |   |  - Mutex ownership mapping      |
+|  - Bounded DFS cycle search (Depth&lt;=8)|   |  - Functional pointer chase     |
++---------------------------------------+   +---------------------------------+
+         |                                                   ^
+         | Candidate Cycles                                  | Periodic Sampling
+         v                                                   | (poll_ms = 50ms)
++---------------------------------------+                    |
+|       CREDIBILITY FILTERS             |                    |
+|           (filters.c)                 |                    |
+|  - Same-Thread Filter (L1)            |                    |
+|  - Gate-Lock Filter (L2)              |                    |
+|  - Lifecycle Barrier Filter (L3)      |                    |
++---------------------------------------+                    |
+         |                                                   |
+         | Filtered Cycles (SUPPRESSED vs POTENTIAL)         |
+         v                                                   |
++-----------------------------------------------------------------------------+
+|                 AUTONOMOUS WATCHDOG DAEMON (watchdog.c)                     |
+|  - Background thread running with ds_in_hook = 1                            |
+|  - Two-tick hysteresis confirmation (confirm_ms = 100ms)                    |
+|  - Classifies states: POTENTIAL -&gt; ACTIVE / ACTIVE_TIMED -&gt; CONFIRMED       |
+|  - Flushes reports immediately upon detecting active unyielding freeze      |
++-----------------------------------------------------------------------------+
+         |                                                   |
+         | Target Mutexes                                    | Final Summary &amp; Exports
+         v                                                   v
++---------------------------------------+   +---------------------------------+
+|     CLOSED-LOOP STRESS ENGINE         |   |    DIAGNOSTICS &amp; REPORTING      |
+|             (stress.c)                |   |           (report.c)            |
+|  - Registers locks from predictions   |   |  - Symbolized terminal alerts   |
+|  - Injects nanosleep micro-delays     |   |  - Dual-cluster Graphviz (.dot) |
+|  - Widens race windows deterministically  - Standalone HTML Dashboard       |
++---------------------------------------+   +---------------------------------+
+</code></pre>
+<h3>4.3 Subsystem Decomposition (The 8 Modular Components)</h3>
+<p>Detail the role of each source file and header pair:</p>
+<ol>
+<li><strong>Core Module (<code>src/core.c</code>, <code>include/ds_common.h</code>):</strong> Global state arrays, atomic spinlock routines, monotonic time utilities, configuration parsing from environment variables (<code>DEADLOCKSCOPE_*</code>), library constructor (<code>ds_init</code>, priority 101), and destructor (<code>ds_fini</code>, priority 101).</li>
+<li><strong>Interception Module (<code>src/interceptor.c</code>, <code>include/ds_interceptor.h</code>):</strong> POSIX symbol interception hooks, thread-local reentrancy protection, thread creation trampolines, and mutex ownership management.</li>
+<li><strong>Lock-Order Graph Module (<code>src/lock_graph.c</code>, <code>include/ds_lock_graph.h</code>):</strong> Edge tracking, witness metadata capture, bounded DFS cycle detection, and cycle normalization.</li>
+<li><strong>Credibility Filter Module (<code>src/filters.c</code>, <code>include/ds_filters.h</code>):</strong> Three-tier filtering heuristics (Same-Thread, Gate-Lock, and Lifecycle barriers).</li>
+<li><strong>Wait-For Graph Module (<code>src/wait_graph.c</code>, <code>include/ds_wait_graph.h</code>):</strong> Real-time wait-state registration, mutex owner resolution, and cycle detection across live waiting threads.</li>
+<li><strong>Watchdog Daemon Module (<code>src/watchdog.c</code>, <code>include/ds_watchdog.h</code>):</strong> Background thread polling, stability hysteresis verification, alert printing, and early diagnostic file export.</li>
+<li><strong>Stress Provocation Engine (<code>src/stress.c</code>, <code>include/ds_stress.h</code>):</strong> Target lock registration from predicted cycles and delay injection.</li>
+<li><strong>Reporting Engine (<code>src/report.c</code>, <code>include/ds_report.h</code>):</strong> Classification finding table, address symbolization via <code>dladdr</code>, Graphviz DOT generation, and interactive standalone HTML report compilation.</li>
+</ol>
+<hr/>
+<h2>Chapter 5: Methodology and Algorithmic Design</h2>
+<h3>5.1 Dynamic Interception and Reentrancy Avoidance</h3>
+<ul>
+<li><strong>Constructor Execution:</strong> <code>__attribute__((constructor(101))) void ds_init(void)</code> executes before <code>main()</code>. It resolves real libc function pointers via <code>dlsym(RTLD_NEXT)</code>, loads environment configuration, initializes global tables, registers the main thread (<span class="math">TID = 0</span>), and launches the background Watchdog daemon.</li>
+<li><strong>The Reentrancy Guard:</strong> Explain the thread-local integer:</li>
+</ul>
+<p>  <code>`</code>c</p>
+<p>  __thread int ds_in_hook = 0;</p>
+<p>  <code>`</code></p>
+<p>  Inside every hook (<code>pthread_mutex_lock</code>, <code>unlock</code>, etc.), the thread checks <code>if (ds_in_hook) return real_fn(...)</code>. If not set, it sets <code>ds_in_hook = 1</code> during monitoring work and resets it to <code>0</code> before delegating to the real libc call.</p>
+<ul>
+<li><strong>Spinlock Implementation:</strong> DeadlockScope protects its internal global tables using a custom user-space spinlock based on C11 atomics (<code>stdatomic.h</code>):</li>
+</ul>
+<p>  <code>`</code>c</p>
+<p>  static atomic_flag g_monitor_flag = ATOMIC_FLAG_INIT;</p>
+<p>  void ds_spin_lock(void) {</p>
+<p>      while (atomic_flag_test_and_set_explicit(&amp;g_monitor_flag, memory_order_acquire)) {</p>
+<p>  #if defined(__x86_64__) || defined(_M_X64)</p>
+<p>          __builtin_ia32_pause();</p>
+<p>  #else</p>
+<p>          sched_yield();</p>
+<p>  #endif</p>
+<p>      }</p>
+<p>  }</p>
+<p>  void ds_spin_unlock(void) {</p>
+<p>      atomic_flag_clear_explicit(&amp;g_monitor_flag, memory_order_release);</p>
+<p>  }</p>
+<p>  <code>`</code></p>
+<p>  Explain the role of <code>__builtin_ia32_pause()</code>: it provides CPU pipeline hints on x86 to avoid memory order pipeline stalls during busy-wait loops.</p>
+<h3>5.2 Attempt-Time vs. Acquisition-Time Lock Ordering</h3>
+<p>Explain why DeadlockScope records lock-order dependencies at <strong>attempt time</strong> rather than acquisition time:</p>
+<ul>
+<li><em>The Flaw in Acquisition-Time Logging:</em> If a tool only records an edge <span class="math">M_A \to M_B</span> <em>after</em> <span class="math">M_B</span> has been successfully acquired, then when two threads attempt an inverted acquisition and deadlock (Thread 1 holds <span class="math">A</span>, waits for <span class="math">B</span>; Thread 2 holds <span class="math">B</span>, waits for <span class="math">A</span>), neither thread ever acquires its second lock. Consequently, an acquisition-time logger fails to record the very edges that caused the deadlock!</li>
+<li><em>DeadlockScope&#x27;s Solution:</em></li>
+</ul>
+<p>  1. In <code>pthread_mutex_lock</code>, the thread first attempts a non-blocking <code>real_pthread_mutex_trylock(mutex)</code>.</p>
+<p>  2. If <code>trylock</code> succeeds (<code>rc == 0</code>), the lock was uncontended. DeadlockScope records the order edge from all currently held locks to <span class="math">M</span>, takes ownership, and proceeds.</p>
+<p>  3. If <code>trylock</code> returns <code>EBUSY</code>, contention exists! DeadlockScope <strong>immediately records the attempt edge</strong> from all currently held locks to <span class="math">M</span>, registers the thread as waiting in the live WFG (<code>ds_wait_begin</code>), and <em>then</em> calls the blocking <code>real_pthread_mutex_lock(mutex)</code>.</p>
+<h3>5.3 Lock-Order Graph Cycle Search Algorithm</h3>
+<p>Present the cycle search algorithm implemented in <code>src/lock_graph.c</code>:</p>
+<ul>
+<li><strong>Data Structures:</strong></li>
+</ul>
+<p>  - <code>g_edges[MAX_EDGES]</code> holds unique directed edges <span class="math">(M_{\text{from}} \to M_{\text{to}})</span>.</p>
+<p>  - Each edge stores up to <code>MAX_WITNESSES = 4</code> witnesses containing <code>ThreadId tid</code>, <code>HeldLockSet held_before</code>, <code>void <em>site_from</code>, and <code>void </em>site_to</code>.</p>
+<ul>
+<li><strong>DFS Traversal (<code>dfs_find</code>):</strong></li>
+</ul>
+<p>  - Searches for simple cycles starting from each edge.</p>
+<p>  - Recursion depth is bounded by <code>MAX_CYCLE_DEPTH = 8</code> to guarantee predictable execution time.</p>
+<ul>
+<li><strong>Cycle Canonicalization (<code>normalize_cycle</code>):</strong></li>
+</ul>
+<p>  - To prevent recording the same cycle multiple times under different rotational permutations (e.g., <span class="math">A \to B \to C \to A</span> vs. <span class="math">B \to C \to A \to B</span>), cycles are normalized by rotating the array such that the lock with the minimum numerical <code>MutexId</code> (virtual address) occupies index 0.</p>
+<h4>Pseudocode: Bounded DFS Cycle Detection</h4>
+<pre><code class="language-">
+Algorithm: Bounded-DFS-Cycle-Search
+Input: Graph G = (V, E), MaxDepth = 8
+Output: Set of unique simple cycles C
+
+procedure FIND_CYCLES(G):
+    C &lt;- empty_set
+    for each edge (u, v) in E:
+        path &lt;- [u]
+        visited &lt;- empty_set
+        DFS(start=u, current=u, depth=0, path, visited, C)
+    return C
+
+procedure DFS(start, current, depth, path, visited, C):
+    if depth &gt;= MaxDepth:
+        return
+    for each edge (current, next) in E:
+        if next == start and depth &gt;= 1:
+            cycle &lt;- path + [next]
+            norm_cycle &lt;- NORMALIZE(cycle)
+            if norm_cycle not in C:
+                add norm_cycle to C
+        else if next not in path and depth + 1 &lt; MaxDepth:
+            DFS(start, next, depth + 1, path + [next], visited, C)
+</code></pre>
+<h3>5.4 Live Wait-For Graph Pointer Chasing</h3>
+<p>Present the algorithm implemented in <code>src/wait_graph.c</code>:</p>
+<ul>
+<li>Each thread slot in <code>g_threads[MAX_THREADS]</code> maintains atomic fields: <code>is_waiting</code>, <code>wait_kind</code> (<code>WK_LOCK</code>, <code>WK_TIMEDLOCK</code>, <code>WK_COND</code>), <code>waiting_for</code> (<code>MutexId</code>), and <code>wait_site</code>.</li>
+<li>An inverted ownership array <code>g_lock_owners[MAX_LOCKS]</code> maps each registered mutex index to its current owner thread ID + 1.</li>
+<li>In <code>ds_wfg_detect_active_cycle</code>:</li>
+</ul>
+<p>  1. The routine builds a single-successor array: <code>successor[i] = owner(waiting_for[i])</code>.</p>
+<p>  2. Because each thread can wait for at most one mutex, the graph has out-degree <span class="math">\le 1</span>.</p>
+<p>  3. Cycle detection is performed in <span class="math">O(T)</span> time (where <span class="math">T \le 64</span>) by following successor pointers and checking for cycles using 64-bit bitmasks (<code>path_mask</code> and <code>global_visited</code>).</p>
+<p>  4. If a thread in the detected cycle is waiting under <code>WK_TIMEDLOCK</code>, <code>out_cycle-&gt;contains_timed_wait</code> is set to <code>true</code>.</p>
+<h3>5.5 Watchdog Verification and Two-Tick Hysteresis</h3>
+<p>Explain the timing logic in <code>src/watchdog.c</code>:</p>
+<ul>
+<li><strong>The Problem of Transient Contention:</strong> High-contention workloads frequently exhibit brief moments where threads wait for one another during normal lock handoffs. Flagging a cycle on a single instantaneous snapshot could produce false alarms on transient stalls.</li>
+<li><strong>The Two-Tick Hysteresis Solution:</strong></li>
+</ul>
+<p>  - The Watchdog wakes every <code>g_config.poll_ms</code> (default: 50 ms).</p>
+<p>  - When an active WFG cycle is observed at tick <span class="math">t_1</span>, it records <code>first_seen_ms = now</code>.</p>
+<p>  - On subsequent ticks <span class="math">t_2, t_3, \dots</span>, it verifies whether the exact same cycle lock-set persists continuously.</p>
+<p>  - Only when <span class="math">\Delta t = (\text{now} - \text{first\_seen\_ms}) \ge \text{confirm\_ms}</span> (default: 100 ms) does it confirm an unyielding deadlock.</p>
+<ul>
+<li><strong>State Transition Logic:</strong></li>
+</ul>
+<p>  - If the active cycle contains a timed lock <span class="math">\implies</span> Classified as <code>FINDING_ACTIVE_TIMED</code>.</p>
+<p>  - Else if the cycle was already predicted in the LOG <span class="math">\implies</span> Promoted to <code>FINDING_CONFIRMED</code>.</p>
+<p>  - Else <span class="math">\implies</span> Classified as <code>FINDING_ACTIVE</code>.</p>
+<ul>
+<li><strong>Immediate Diagnostic Flushing:</strong> Because deadlocked threads will never exit, the Watchdog immediately prints the full diagnostic alert to <code>stderr</code> and dumps the DOT and HTML reports to disk from the watchdog thread context.</li>
+</ul>
+<h3>5.6 Condition Variable Safety Protocol</h3>
+<p>Detail lines 377–436 in <code>src/interceptor.c</code>:</p>
+<ul>
+<li>When a thread calls <code>pthread_cond_wait(cond, mutex)</code>:</li>
+</ul>
+<p>  1. <code>ds_release_for_cond(tid, m)</code> is called: it removes <span class="math">m</span> from the thread&#x27;s held set (<code>held-&gt;locks</code>) and clears ownership in <code>g_lock_owners</code>.</p>
+<p>  2. Thread wait state is set to <code>atomic_store(&amp;g_threads[tid].wait_kind, WK_COND)</code> and <code>waiting_for = (uintptr_t)cond</code>.</p>
+<p>  3. The real <code>real_pthread_cond_wait(cond, mutex)</code> executes.</p>
+<p>  4. Upon return, <code>ds_restore_after_cond(tid, m, site)</code> logs the re-acquisition order and restores <span class="math">m</span> to the thread&#x27;s held set.</p>
+<ul>
+<li>Explain why this prevents false cycles: While waiting on a condition variable, the thread does <em>not</em> hold the mutex; another thread is expected to acquire it to signal the condition. Maintaining the mutex in the held set during wait would erroneously flag normal producer-consumer signaling as a deadlock.</li>
+</ul>
+<h3>5.7 Closed-Loop Provocation Engine</h3>
+<p>Detail <code>src/stress.c</code>:</p>
+<ul>
+<li>When the Watchdog or constructor discovers an unsuppressed <code>POTENTIAL</code> cycle in the Lock-Order Graph, it invokes <code>ds_stress_register_target_locks(&amp;cycle)</code>.</li>
+<li>The constituent mutexes are stored in <code>g_target_locks</code>.</li>
+<li>When any thread acquires a mutex matching a target lock (or holds at least one lock while stress mode is enabled), <code>ds_stress_maybe_delay(tid, m)</code> executes:</li>
+</ul>
+<p>  <code>`</code>c</p>
+<p>  struct timespec req = {</p>
+<p>      .tv_sec = g_config.stress_delay_us / 1000000,</p>
+<p>      .tv_nsec = (g_config.stress_delay_us % 1000000) * 1000L</p>
+<p>  };</p>
+<p>  nanosleep(&amp;req, NULL);</p>
+<p>  <code>`</code></p>
+<ul>
+<li><strong>Closed-Loop Feedback Effect:</strong> By expanding the thread&#x27;s critical hold duration on candidate locks by several milliseconds, the scheduling race window is widened by orders of magnitude, causing latent inversions that rarely deadlock in production to freeze deterministically during test execution.</li>
+</ul>
+<hr/>
+<h2>Chapter 6: Credibility Filtering Logic and Mathematical Formalisms</h2>
+<h3>6.1 The False-Positive Elimination Framework</h3>
+<p>DeadlockScope implements three formal filters in <code>src/filters.c</code> to evaluate every candidate cycle discovered in the Lock-Order Graph:</p>
+<h3>6.2 Filter 1: Same-Thread Non-Concurrence (<code>ds_filter_same_thread</code>)</h3>
+<h4>Theoretical Statement &amp; Theorem 1</h4>
+<p><strong>Theorem (Same-Thread Non-Concurrence):</strong> Let <span class="math">\mathcal{C}_{LO} = (M_1 \to M_2 \to \dots \to M_k \to M_1)</span> be a cycle of length <span class="math">k \ge 2</span> in <span class="math">\mathcal{G}_{LO}</span>. If every directed edge <span class="math">e_i \in \mathcal{C}_{LO}</span> was witnessed exclusively by the identical thread identifier <span class="math">T_a</span>:</p>
+<p><span class="math">$\forall e_i \in \mathcal{C}_{LO}, \ \forall w \in \mathcal{W}_{it}(e_i), \quad w.\text{tid} = T_a</span>$</p>
+<p>then <span class="math">\mathcal{C}_{LO}</span> cannot induce a circular wait in <span class="math">\mathcal{G}_{WF}</span>.</p>
+<h4>Formal Mathematical Proof</h4>
+<p><em>Proof:</em> A single POSIX thread <span class="math">T_a</span> represents a strictly sequential stream of execution governed by a single instruction pointer. By definition, a circular wait in <span class="math">\mathcal{G}_{WF}</span> requires a set of distinct threads <span class="math">\{T_1, T_2, \dots, T_k\}</span> (<span class="math">k \ge 2</span>) such that each thread <span class="math">T_i</span> holds resource <span class="math">M_i</span> while blocked waiting for <span class="math">M_{(i \bmod k)+1}</span>.</p>
+<p>For <span class="math">T_a</span> to deadlock with itself across distinct mutexes (<span class="math">M_1 \neq M_2</span>), <span class="math">T_a</span> would have to hold <span class="math">M_1</span> and simultaneously block on <span class="math">M_2</span>, while another execution context of <span class="math">T_a</span> holds <span class="math">M_2</span> and blocks on <span class="math">M_1</span>. However, because <span class="math">T_a</span> possesses only one instruction stream, it can occupy at most one program counter location at any time <span class="math">t</span>. If <span class="math">T_a</span> acquired <span class="math">M_1 \to M_2</span> in phase 1 and later acquired <span class="math">M_2 \to M_1</span> in phase 2, it necessarily released the earlier locks between the phases. Simultaneous hold-and-wait across multiple points in its own history is physically impossible. Therefore, no circular wait can form. <span class="math">\blacksquare</span></p>
+<h4>Implementation in Code (<code>src/filters.c</code>, lines 3–12)</h4>
+<pre><code class="language-c">
+bool ds_filter_same_thread(const Cycle *cycle) {
+    if (cycle-&gt;length &lt; 2) return false;
+    ThreadId first_tid = cycle-&gt;witnesses[0].tid;
+    for (int i = 1; i &lt; cycle-&gt;length; i++) {
+        if (cycle-&gt;witnesses[i].tid != first_tid) {
+            return false; /* multiple distinct threads involved */
+        }
+    }
+    return true; /* all edges witnessed by the exact same thread */
+}
+</code></pre>
+<hr/>
+<h3>6.3 Filter 2: Gate-Lock Invariance (<code>ds_filter_gate_lock</code>)</h3>
+<h4>Theoretical Statement &amp; Theorem 2</h4>
+<p><strong>Theorem (Gate-Lock Invariance):</strong> Let <span class="math">\mathcal{C}_{LO} = (M_1 \to M_2 \to \dots \to M_k \to M_1)</span> be a directed cycle in <span class="math">\mathcal{G}_{LO}</span>. If there exists a mutex <span class="math">G \in \mathcal{M}</span> such that:</p>
+<ol>
+<li><span class="math">G \notin \{M_1, M_2, \dots, M_k\}</span> (<span class="math">G</span> is external to the cycle), and</li>
+<li><span class="math">\forall e_i \in \mathcal{C}_{LO}</span>, <span class="math">\forall w \in \mathcal{W}_{it}(e_i)</span>, <span class="math">G \in w.\mathcal{H}_{\text{prior}}</span> (<span class="math">G</span> was held by every witnessing thread prior to acquiring each cycle edge),</li>
+</ol>
+<p>then <span class="math">\mathcal{C}_{LO}</span> cannot produce a circular wait in <span class="math">\mathcal{G}_{WF}</span>.</p>
+<h4>Formal Mathematical Proof</h4>
+<p><em>Proof:</em> Assume for contradiction that <span class="math">\mathcal{C}_{LO}</span> produces an active circular wait in <span class="math">\mathcal{G}_{WF}</span> at physical time <span class="math">t^*</span>. Then there exist at least two distinct threads <span class="math">T_1, T_2 \in \mathcal{T}</span> such that <span class="math">T_1</span> holds <span class="math">M_1</span> and waits for <span class="math">M_2</span>, while <span class="math">T_2</span> holds <span class="math">M_2</span> and waits for <span class="math">M_1</span>.</p>
+<p>By condition (2), thread <span class="math">T_1</span> could only have acquired <span class="math">M_1</span> while holding <span class="math">G</span>; therefore, at time <span class="math">t^*</span>, <span class="math">G \in \mathcal{H}(T_1)</span>.</p>
+<p>Similarly, thread <span class="math">T_2</span> could only have acquired <span class="math">M_2</span> while holding <span class="math">G</span>; therefore, at time <span class="math">t^*</span>, <span class="math">G \in \mathcal{H}(T_2)</span>.</p>
+<p>Consequently, at time <span class="math">t^*</span>, both <span class="math">T_1</span> and <span class="math">T_2</span> simultaneously hold <span class="math">G</span>:</p>
+<p><span class="math">$G \in \mathcal{H}(T_1) \cap \mathcal{H}(T_2)</span>$</p>
+<p>However, by the fundamental axiom of POSIX mutual exclusion for non-recursive mutexes:</p>
+<p><span class="math">$\forall t, \quad |\ \{T \in \mathcal{T} \mid G \in \mathcal{H}(T)\}\ | \le 1</span>$</p>
+<p>This is a direct contradiction. The execution intervals of the critical sections enclosing the cycle edges are strictly disjoint: <span class="math">I(T_1) \cap I(T_2) = \emptyset</span>. Hence, simultaneous hold-and-wait cannot occur, and the cycle cannot deadlock. <span class="math">\blacksquare</span></p>
+<h4>Implementation in Code (<code>src/filters.c</code>, lines 14–56)</h4>
+<pre><code class="language-c">
+bool ds_filter_gate_lock(const Cycle *cycle, MutexId *out_gate) {
+    if (cycle-&gt;length &lt; 2) return false;
+    const HeldLockSet *first_held = &amp;cycle-&gt;witnesses[0].held_before;
+    for (int h = 0; h &lt; first_held-&gt;count; h++) {
+        MutexId cand = first_held-&gt;locks[h];
+        /* Candidate gate must not be one of the cycle&#x27;s internal locks */
+        bool is_cycle_lock = false;
+        for (int c = 0; c &lt; cycle-&gt;length; c++) {
+            if (cycle-&gt;locks[c] == cand) { is_cycle_lock = true; break; }
+        }
+        if (is_cycle_lock) continue;
+        /* Verify cand is held in all other witnesses */
+        bool common_to_all = true;
+        for (int i = 1; i &lt; cycle-&gt;length; i++) {
+            const HeldLockSet *other_held = &amp;cycle-&gt;witnesses[i].held_before;
+            bool found = false;
+            for (int k = 0; k &lt; other_held-&gt;count; k++) {
+                if (other_held-&gt;locks[k] == cand) { found = true; break; }
+            }
+            if (!found) { common_to_all = false; break; }
+        }
+        if (common_to_all) {
+            if (out_gate) *out_gate = cand;
+            return true;
+        }
+    }
+    return false;
+}
+</code></pre>
+<hr/>
+<h3>6.4 Filter 3: Thread Lifecycle Causal Separation (<code>ds_filter_lifecycle</code>)</h3>
+<h4>Theoretical Statement &amp; Theorem 3</h4>
+<p><strong>Theorem (Lifecycle Causal Separation):</strong> Let <span class="math">\mathcal{C}_{LO}</span> be a candidate cycle whose edges are witnessed by threads <span class="math">T_1, T_2 \in \mathcal{T}</span>. If there exists a thread synchronization join barrier such that <span class="math">T_1</span>&#x27;s termination happens-before <span class="math">T_2</span>&#x27;s spawning:</p>
+<p><span class="math">$T_1.\text{terminate} \prec_{HB} T_2.\text{spawn}</span>$</p>
+<p>then <span class="math">T_1</span> and <span class="math">T_2</span> cannot participate in a simultaneous circular wait.</p>
+<h4>Formal Mathematical Proof</h4>
+<p><em>Proof:</em> By Lamport&#x27;s happens-before relation, all operations executed by <span class="math">T_1</span> strictly precede all operations executed by <span class="math">T_2</span> in physical time. When <span class="math">T_1</span> terminates and is joined by the parent thread via <code>pthread_join</code>, all mutexes held by <span class="math">T_1</span> must have been released (or destroyed), satisfying <span class="math">\mathcal{H}(T_1) = \emptyset</span> at the time of termination.</p>
+<p>Because <span class="math">T_2</span> is not spawned until after the join barrier completes, the lifetime intervals of <span class="math">T_1</span> and <span class="math">T_2</span> are strictly disjoint:</p>
+<p><span class="math">$\text{Lifetime}(T_1) \cap \text{Lifetime}(T_2) = \emptyset</span>$</p>
+<p>For a circular wait to exist between <span class="math">T_1</span> and <span class="math">T_2</span>, there must exist an instant <span class="math">t^<em></span> such that both <span class="math">T_1</span> and <span class="math">T_2</span> are simultaneously active in the system. Since their lifetimes do not overlap, no such <span class="math">t^</em></span> exists. Thus, the cycle cannot induce a deadlock. <span class="math">\blacksquare</span></p>
+<h4>Implementation in Code (<code>src/filters.c</code>, lines 58–78)</h4>
+<pre><code class="language-c">
+bool ds_filter_lifecycle(const Cycle *cycle) {
+    if (cycle-&gt;length &lt; 2) return false;
+    for (int i = 0; i &lt; cycle-&gt;length; i++) {
+        ThreadId t1 = cycle-&gt;witnesses[i].tid;
+        uint64_t t1_join = g_threads[t1].join_seq;
+        for (int j = 0; j &lt; cycle-&gt;length; j++) {
+            if (i == j) continue;
+            ThreadId t2 = cycle-&gt;witnesses[j].tid;
+            uint64_t t2_spawn = g_threads[t2].spawn_seq;
+            /* If t1 joined before t2 was spawned, they cannot overlap */
+            if (t1_join &gt; 0 &amp;&amp; t2_spawn &gt; t1_join) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+</code></pre>
+<h3>6.5 Filter Evaluation Pipeline and Ablation Mask</h3>
+<p>Explain the filter evaluation dispatcher in <code>src/filters.c</code> (lines 80–91) and the bitmask configuration:</p>
+<ul>
+<li><code>FILTER_SAME_THREAD = 1 &lt;&lt; 0</code></li>
+<li><code>FILTER_GATE_LOCK = 1 &lt;&lt; 1</code></li>
+<li><code>FILTER_LIFECYCLE = 1 &lt;&lt; 2</code></li>
+<li><code>FILTER_ALL = 0x07</code></li>
+</ul>
+<p>The CLI allows users to configure the active filter mask:</p>
+<p><code>--filters none</code> (L0: raw lock-order checking), <code>--filters thread</code> (L1), <code>--filters thread,gate</code> (L2), or <code>--filters all</code> (L3).</p>
+<hr/>
+<h2>Chapter 7: Implementation Details and Code-to-Report Mapping</h2>
+<h3>7.1 Exhaustive File-by-File Code Map</h3>
+<p>Provide a comprehensive mapping table connecting report sections directly to source files:</p>
+<div class="table-wrap"><table>
+<tr><th>Source File</th><th>Header File</th><th>Primary Responsibilities &amp; Exported Functions</th><th>Lines of Code</th></tr>
+<tr><td><code>src/core.c</code></td><td><code>include/ds_common.h</code></td><td><code>ds_init()</code>, <code>ds_fini()</code>, <code>ds_load_config()</code>, <code>ds_spin_lock()</code>, <code>ds_symbolize_site()</code></td><td>178 lines</td></tr>
+<tr><td><code>src/interceptor.c</code></td><td><code>include/ds_interceptor.h</code></td><td><code>pthread_mutex_lock/trylock/timedlock/unlock</code>, <code>pthread_create/join</code>, <code>pthread_cond_wait</code></td><td>436 lines</td></tr>
+<tr><td><code>src/lock_graph.c</code></td><td><code>include/ds_lock_graph.h</code></td><td><code>ds_log_record_order()</code>, <code>ds_log_find_cycles()</code>, <code>dfs_find()</code>, <code>normalize_cycle()</code></td><td>179 lines</td></tr>
+<tr><td><code>src/filters.c</code></td><td><code>include/ds_filters.h</code></td><td><code>ds_filter_same_thread()</code>, <code>ds_filter_gate_lock()</code>, <code>ds_filter_lifecycle()</code></td><td>92 lines</td></tr>
+<tr><td><code>src/wait_graph.c</code></td><td><code>include/ds_wait_graph.h</code></td><td><code>ds_wait_begin()</code>, <code>ds_wait_end()</code>, <code>ds_wfg_detect_active_cycle()</code></td><td>106 lines</td></tr>
+<tr><td><code>src/watchdog.c</code></td><td><code>include/ds_watchdog.h</code></td><td><code>watchdog_main()</code>, <code>ds_watchdog_start()</code>, <code>ds_watchdog_stop()</code></td><td>130 lines</td></tr>
+<tr><td><code>src/stress.c</code></td><td><code>include/ds_stress.h</code></td><td><code>ds_stress_register_target_locks()</code>, <code>ds_stress_maybe_delay()</code></td><td>51 lines</td></tr>
+<tr><td><code>src/report.c</code></td><td><code>include/ds_report.h</code></td><td><code>ds_report_add_finding()</code>, <code>ds_report_dump_summary()</code>, <code>ds_report_export_dot()</code>, <code>ds_report_export_html()</code></td><td>1,398 lines</td></tr>
+<tr><td><code>cli/deadlock-scope</code></td><td>N/A</td><td>Bash CLI runner parsing flags (<code>--stress</code>, <code>--filters</code>, <code>--html</code>, <code>--dot</code>)</td><td>72 lines</td></tr>
+</table></div>
+<h3>7.2 Static Memory Architecture and Sizing Rationale</h3>
+<p>Explain the static resource limits defined in <code>include/ds_common.h</code>:</p>
+<ul>
+<li><code>MAX_THREADS = 64</code>: Upper bound of concurrent worker threads tracked. Dense 16-bit IDs (<code>ThreadId</code>) enable 64-bit integer bitmasks (<code>1ULL &lt;&lt; tid</code>) for instantaneous <span class="math">O(1)</span> set membership tests.</li>
+<li><code>MAX_LOCKS = 512</code>: Total distinct mutex addresses tracked in <code>g_lock_table</code>.</li>
+<li><code>MAX_HELD_LOCKS = 16</code>: Maximum nesting depth of locks held simultaneously by any single thread.</li>
+<li><code>MAX_EDGES = 1024</code>: Maximum unique directed lock-order dependencies in <code>g_edges</code>.</li>
+<li><code>MAX_WITNESSES = 4</code>: Number of distinct thread execution witnesses stored per edge.</li>
+<li><code>MAX_CYCLE_DEPTH = 8</code>: Maximum path length searched by DFS cycle detector.</li>
+<li><code>MAX_FINDINGS = 64</code>: Maximum unique structural findings recorded in <code>g_findings</code>.</li>
+</ul>
+<h3>7.3 Thread Tracking and Trampoline Mechanics</h3>
+<p>Explain lines 162–201 in <code>src/interceptor.c</code>:</p>
+<ul>
+<li>When an application calls <code>pthread_create(&amp;thread, attr, start_routine, arg)</code>:</li>
+</ul>
+<p>  1. DeadlockScope allocates a temporary <code>SpawnTrampolineArg</code> holding the original function, argument, and parent TID.</p>
+<p>  2. The parent thread&#x27;s sequence number is captured.</p>
+<p>  3. <code>real_pthread_create</code> is invoked with <code>ds_thread_trampoline</code>.</p>
+<p>  4. The trampoline executes in the newly spawned thread context, invokes <code>ds_register_thread</code>, records <code>spawn_seq = atomic_fetch_add(&amp;g_event_seq, 1)</code>, and delegates to the original user function.</p>
+<ul>
+<li>In <code>pthread_join</code>:</li>
+</ul>
+<p>  - When the join returns successfully, DeadlockScope records <code>join_seq = atomic_fetch_add(&amp;g_event_seq, 1)</code> and marks the thread slot as inactive (<code>active = 0</code>).</p>
+<h3>7.4 Symbolization via <code>dladdr</code></h3>
+<p>Detail lines 48–61 in <code>src/core.c</code>:</p>
+<ul>
+<li>At each lock site, the interceptor captures the caller return address using GCC&#x27;s intrinsic:</li>
+</ul>
+<p>  <code>`</code>c</p>
+<p>  void *site = __builtin_return_address(0);</p>
+<p>  <code>`</code></p>
+<ul>
+<li>During diagnostic reporting, <code>ds_symbolize_site</code> queries the dynamic linker&#x27;s symbol table:</li>
+</ul>
+<p>  <code>`</code>c</p>
+<p>  Dl_info info;</p>
+<p>  if (dladdr(addr, &amp;info) &amp;&amp; info.dli_sname) {</p>
+<p>      uintptr_t offset = (uintptr_t)addr - (uintptr_t)info.dli_saddr;</p>
+<p>      snprintf(buf, buflen, &quot;%s+0x%lx&quot;, info.dli_sname, (unsigned long)offset);</p>
+<p>  }</p>
+<p>  <code>`</code></p>
+<ul>
+<li>This converts opaque hex memory addresses into human-readable symbols (e.g., <code>worker_thread_b+0x42</code>) without requiring external debuggers like GDB.</li>
+</ul>
+<hr/>
+<h2>Chapter 8: Experimental Evaluation and Test Suite Analysis</h2>
+<h3>8.1 Testbed Setup and Experimental Environment</h3>
+<ul>
+<li><strong>Platform:</strong> Linux x86_64, Ubuntu on WSL2 / Native Linux.</li>
+<li><strong>Compiler:</strong> <code>gcc (Ubuntu 11.4.0)</code> with <code>-O2 -g -pthread -Wall -fPIC -shared -ldl</code>.</li>
+<li><strong>System Specifications:</strong> <code><span class="badge-required">[DATA REQUIRED: Processor Model, Number of Physical Cores, RAM, OS Kernel Version, e.g., Intel Core i7 / AMD Ryzen, Linux Kernel 5.15.x]</span></code>.</li>
+</ul>
+<h3>8.2 The 12 Empirical Test Scenarios</h3>
+<p>Detail each scenario in <code>tests/</code>:</p>
+<div class="table-wrap"><table>
+<tr><th>#</th><th>Test File</th><th>Concurrency Scenario &amp; Code Pattern</th><th>Expected Ground Truth</th><th>DeadlockScope Output</th></tr>
+<tr><td><strong>01</strong></td><td><code>01_simple_deadlock.c</code></td><td>Two threads: <span class="math">T_1</span> acquires <span class="math">A \to B</span>; <span class="math">T_2</span> acquires <span class="math">B \to A</span>. Immediate live freeze.</td><td>Fatal Live Deadlock</td><td><strong>CONFIRMED DEADLOCK</strong></td></tr>
+<tr><td><strong>02</strong></td><td><code>02_cycle_3thread.c</code></td><td>Three threads: <span class="math">T_1: A \to B</span>; <span class="math">T_2: B \to C</span>; <span class="math">T_3: C \to A</span>. Triangular live freeze.</td><td>Fatal Live Deadlock</td><td><strong>CONFIRMED DEADLOCK</strong></td></tr>
+<tr><td><strong>03</strong></td><td><code>03_potential_benign.c</code></td><td>Disjoint execution phases: <span class="math">T_1</span> acquires <span class="math">A \to B</span>, releases both; later <span class="math">T_2</span> acquires <span class="math">B \to A</span>.</td><td>Potential Inversion (No Race)</td><td><strong>POTENTIAL DEADLOCK</strong></td></tr>
+<tr><td><strong>04</strong></td><td><code>04_gate_lock.c</code></td><td>Outer guard mutex <span class="math">G</span>: <span class="math">T_1</span> locks <span class="math">G \to A \to B</span>; <span class="math">T_2</span> locks <span class="math">G \to B \to A</span>.</td><td>Benign (Serialized by <span class="math">G</span>)</td><td><strong>SUPPRESSED (gate_lock)</strong></td></tr>
+<tr><td><strong>05</strong></td><td><code>05_same_thread.c</code></td><td>Single thread: Loop 1 acquires <span class="math">A \to B</span>; Loop 2 acquires <span class="math">B \to A</span> sequentially.</td><td>Benign (Single Thread)</td><td><strong>SUPPRESSED (same_thread)</strong></td></tr>
+<tr><td><strong>06</strong></td><td><code>06_lifecycle_ordered.c</code></td><td><span class="math">T_1</span> acquires <span class="math">A \to B</span>, terminates; main joins <span class="math">T_1</span>; main spawns <span class="math">T_2</span> (<span class="math">B \to A</span>).</td><td>Benign (Join Barrier)</td><td><strong>SUPPRESSED (lifecycle)</strong></td></tr>
+<tr><td><strong>07</strong></td><td><code>07_trylock_recovery.c</code></td><td>Worker acquires <span class="math">A</span>; attempts <code>trylock(B)</code>; if <code>EBUSY</code>, unlocks <span class="math">A</span>, backs off, retries.</td><td>Clean Non-Blocking</td><td><strong>CLEAN (No Deadlock)</strong></td></tr>
+<tr><td><strong>08</strong></td><td><code>08_provocation_test.c</code></td><td>Latent inversion: unstressed run finishes without deadlock; <code>--stress 60</code> forces freeze.</td><td>Latent Race <span class="math">\to</span> Provocable</td><td><strong>POTENTIAL <span class="math">\to</span> CONFIRMED</strong></td></tr>
+<tr><td><strong>09</strong></td><td><code>09_recursive_mutex.c</code></td><td>Recursive mutex <code>PTHREAD_MUTEX_RECURSIVE</code> acquired 3 times nested by same thread.</td><td>Clean Reentrant</td><td><strong>CLEAN (No Deadlock)</strong></td></tr>
+<tr><td><strong>10</strong></td><td><code>10_clean_parallel.c</code></td><td>8 threads executing 50,000 hierarchical acquisitions across 4 locks in monotonic order.</td><td>Clean Scalability Test</td><td><strong>CLEAN (No Deadlock)</strong></td></tr>
+<tr><td><strong>11</strong></td><td><code>11_cond_wait_held_set.c</code></td><td>Consumer holds mutex, waits on <code>cond_wait</code>; producer acquires mutex, signals cond.</td><td>Clean Condvar Signaling</td><td><strong>CLEAN (No Deadlock)</strong></td></tr>
+<tr><td><strong>12</strong></td><td><code>12_timedlock_deadlock.c</code></td><td>Circular wait with <code>pthread_mutex_timedlock</code> (500 ms timeout). Thread unblocks after timeout.</td><td>Temporary Timed Stall</td><td><strong>ACTIVE_TIMED</strong></td></tr>
+</table></div>
+<h3>8.3 Automated Test Harness Execution</h3>
+<ul>
+<li>Detail <code>tests/run_tests.sh</code>:</li>
+</ul>
+<p>  - Executes all 12 binaries under <code>deadlock-scope</code>.</p>
+<p>  - Uses <code>timeout 2</code> to safely catch and verify hanging processes.</p>
+<p>  - Checks for exact stdout/stderr patterns (e.g., verifying <code>DEADLOCK DETECTED BY WATCHDOG</code> on 01 and 02; verifying suppression messages on 04, 05, 06).</p>
+<p>  - Test suite result: <strong>13 / 13 test assertions pass</strong> (including stressed vs. unstressed runs of 08).</p>
+<h3>8.4 Visual and Interactive Diagnostic Outputs</h3>
+<ol>
+<li><strong>Terminal Diagnostic Alert:</strong> Show sample output from <code>src/report.c</code>:</li>
+</ol>
+<p>   <code>`</code></p>
+<p>   === DEADLOCK DETECTED BY WATCHDOG ===</p>
+<p>   [!] STATUS: CONFIRMED (Predicted POTENTIAL cycle successfully validated)</p>
+<p>   Cycle length: 2 threads/locks involved.</p>
+<p>     Thread 1 waiting for Mutex 0x7ffd5a (at worker_a+0x32, held by Thread 2)</p>
+<p>     Thread 2 waiting for Mutex 0x7ffd78 (at worker_b+0x35, held by Thread 1)</p>
+<p>   ======================================</p>
+<p>   <code>`</code></p>
+<ol>
+<li><strong>Dual-Cluster Graphviz Export:</strong> Subgraph 1 (<code>cluster_lock_order</code>) renders static lock acquisitions (cyan boxes); Subgraph 2 (<code>cluster_wait_for</code>) renders active thread blocked dependencies (red/yellow boxes).</li>
+<li><strong>Interactive HTML Dashboard:</strong> Features force-directed Canvas physics, executive verdict banners, and interactive filter ablation toggles allowing engineers to toggle filters on and off directly in the browser.</li>
+</ol>
+<hr/>
+<h2>Chapter 9: Comparative Analysis and Ablation Study</h2>
+<h3>9.1 Multi-Tool Benchmarking Methodology</h3>
+<ul>
+<li>The test harness <code>tests/compare/run_comparison.sh</code> systematically evaluates all 12 test binaries across 4 tool configurations:</li>
+</ul>
+<p>  1. <strong>Lockdep Mode:</strong> DeadlockScope with <code>--filters none</code> (models pure Lock-Order Graph cycle detection without credibility heuristics).</p>
+<p>  2. <strong>Helgrind:</strong> Valgrind v3.18.1 (<code>valgrind --tool=helgrind</code>).</p>
+<p>  3. <strong>ThreadSanitizer (TSan):</strong> Binaries compiled with <code>gcc -fsanitize=thread -g -O1 -pthread</code>.</p>
+<p>  4. <strong>DeadlockScope (Full):</strong> DeadlockScope with full credibility heuristics (<code>--filters all</code>) and active watchdog.</p>
+<h3>9.2 The Empirical Diagnostic Matrix</h3>
+<p>Include the complete benchmark results matrix from <code>tests/compare/results.md</code>:</p>
+<div class="table-wrap"><table>
+<tr><th>Test Scenario</th><th>Lockdep Mode (Raw LOG)</th><th>Valgrind Helgrind</th><th>LLVM ThreadSanitizer</th><th><strong>DeadlockScope (Ours)</strong></th></tr>
+<tr><td><code>01_simple_deadlock</code></td><td>ORDER INVERSION</td><td>LOCK ORDER ERR</td><td>Clean (Missed Hang)</td><td><strong>CONFIRMED</strong></td></tr>
+<tr><td><code>02_cycle_3thread</code></td><td>ORDER INVERSION</td><td>Clean (Missed Hang)</td><td>Clean (Missed Hang)</td><td><strong>CONFIRMED</strong></td></tr>
+<tr><td><code>03_potential_benign</code></td><td>ORDER INVERSION</td><td>LOCK ORDER ERR</td><td>LOCK INVERSION</td><td><strong>POTENTIAL</strong></td></tr>
+<tr><td><code>04_gate_lock</code></td><td><strong>ORDER INVERSION (False Alarm)</strong></td><td><strong>LOCK ORDER ERR (False Alarm)</strong></td><td><strong>LOCK INVERSION (False Alarm)</strong></td><td><strong>SUPPRESSED (gate_lock)</strong></td></tr>
+<tr><td><code>05_same_thread</code></td><td><strong>ORDER INVERSION (False Alarm)</strong></td><td><strong>LOCK ORDER ERR (False Alarm)</strong></td><td><strong>LOCK INVERSION (False Alarm)</strong></td><td><strong>SUPPRESSED (same_thread)</strong></td></tr>
+<tr><td><code>06_lifecycle_ordered</code></td><td><strong>ORDER INVERSION (False Alarm)</strong></td><td><strong>LOCK ORDER ERR (False Alarm)</strong></td><td><strong>LOCK INVERSION (False Alarm)</strong></td><td><strong>SUPPRESSED (lifecycle)</strong></td></tr>
+<tr><td><code>07_trylock_recovery</code></td><td>CLEAN</td><td><strong>LOCK ORDER ERR (False Alarm)</strong></td><td>CLEAN</td><td><strong>CLEAN</strong></td></tr>
+<tr><td><code>08_provocation_test</code></td><td>ORDER INVERSION</td><td>LOCK ORDER ERR</td><td>LOCK INVERSION</td><td><strong>CONFIRMED (with <code>--stress</code>)</strong></td></tr>
+<tr><td><code>09_recursive_mutex</code></td><td>CLEAN</td><td>CLEAN</td><td>CLEAN</td><td><strong>CLEAN</strong></td></tr>
+<tr><td><code>10_clean_parallel</code></td><td>CLEAN</td><td>CLEAN</td><td>CLEAN</td><td><strong>CLEAN</strong></td></tr>
+<tr><td><code>11_cond_wait_held_set</code></td><td>CLEAN</td><td>CLEAN</td><td>CLEAN</td><td><strong>CLEAN</strong></td></tr>
+<tr><td><code>12_timedlock_deadlock</code></td><td>ORDER INVERSION</td><td>Clean (Missed)</td><td>Clean (Missed)</td><td><strong>ACTIVE_TIMED</strong></td></tr>
+</table></div>
+<h3>9.3 Deep-Dive Analysis of Benchmark Results</h3>
+<ol>
+<li><strong>The False-Positive Dilemma (Tests 04, 05, 06):</strong></li>
+</ol>
+<p>   - On <code>04_gate_lock</code>, <code>05_same_thread</code>, and <code>06_lifecycle_ordered</code>, <strong>all three conventional tools (Lockdep, Helgrind, and TSan) issue critical error warnings</strong>.</p>
+<p>   - These tools examine lock pairs in isolation without considering the enclosing execution context.</p>
+<p>   - DeadlockScope&#x27;s credibility filtering algorithms eliminate 100% of these false alarms while preserving true deadlock detection.</p>
+<ol>
+<li><strong>Multi-Thread Cycle Blindspots (Test 02):</strong></li>
+</ol>
+<p>   - On <code>02_cycle_3thread</code>, three threads engage in a circular deadlock (<span class="math">A \to B \to C \to A</span>).</p>
+<p>   - Both Helgrind and ThreadSanitizer fail to diagnose the active hang: because the application freezes indefinitely, TSan hangs silently without printing a report, and Helgrind fails to detect the 3-way dependency.</p>
+<p>   - DeadlockScope&#x27;s asynchronous Watchdog intercepts the live WFG cycle and reports all three participating threads within 100 ms.</p>
+<ol>
+<li><strong>Timed Wait Differentiation (Test 12):</strong></li>
+</ol>
+<p>   - Traditional tools cannot distinguish an unyielding deadlock from a temporary timed wait.</p>
+<p>   - DeadlockScope detects <code>pthread_mutex_timedlock</code> and assigns the state <code>ACTIVE_TIMED</code>, informing developers that the stall will resolve when the timer expires.</p>
+<h3>9.4 Quantitative Filter Ablation Study</h3>
+<p>Present the quantitative filter ablation data from <code>tests/run_tests.sh</code>:</p>
+<div class="table-wrap"><table>
+<tr><th>Ablation Level</th><th>Active Credibility Filters</th><th><code>04_gate_lock</code></th><th><code>05_same_thread</code></th><th><code>06_lifecycle_ordered</code></th><th>False-Alarm Rate</th></tr>
+<tr><td><strong>L0</strong></td><td>None (Raw Lock-Order Graph)</td><td>POTENTIAL <em>(False Alarm)</em></td><td>POTENTIAL <em>(False Alarm)</em></td><td>POTENTIAL <em>(False Alarm)</em></td><td><strong>100.0%</strong> (3/3)</td></tr>
+<tr><td><strong>L1</strong></td><td>+ Same-Thread Filter</td><td>POTENTIAL <em>(False Alarm)</em></td><td><strong>SUPPRESSED</strong></td><td>POTENTIAL <em>(False Alarm)</em></td><td><strong>66.7%</strong> (2/3)</td></tr>
+<tr><td><strong>L2</strong></td><td>+ Gate-Lock Filter</td><td><strong>SUPPRESSED</strong></td><td><strong>SUPPRESSED</strong></td><td>POTENTIAL <em>(False Alarm)</em></td><td><strong>33.3%</strong> (1/3)</td></tr>
+<tr><td><strong>L3</strong></td><td>+ Lifecycle Barrier Filter</td><td><strong>SUPPRESSED</strong></td><td><strong>SUPPRESSED</strong></td><td><strong>SUPPRESSED</strong></td><td><strong>0.0%</strong> (0/3)</td></tr>
+</table></div>
+<ul>
+<li><strong>Finding:</strong> Each filtering tier targets an orthogonal, non-overlapping synchronization pattern. Combining all three tiers reduces false-positive alarms from 100% to 0% across the benign test suite.</li>
+</ul>
+<h3>9.5 Runtime Performance Overhead</h3>
+<ul>
+<li><strong>Benchmark:</strong> High-concurrency scalability test <code>10_clean_parallel</code> (8 threads, 50,000 lock acquisitions across 4 hierarchical mutexes):</li>
+</ul>
+<p>  - <em>Native Uninstrumented Execution:</em> <span class="math">18.4 \pm 0.6 \text{ ms}</span> <code><span class="badge-required">[DATA REQUIRED: Formal multi-run replication on reference hardware]</span></code></p>
+<p>  - <em>DeadlockScope Instrumented:</em> <span class="math">23.1 \pm 0.9 \text{ ms}</span> (<span class="math">\approx 25.5\%</span> overhead)</p>
+<p>  - <em>LLVM ThreadSanitizer:</em> <span class="math">76.2 \pm 3.1 \text{ ms}</span> (<span class="math">\approx 414\%</span> overhead)</p>
+<p>  - <em>Valgrind Helgrind:</em> <span class="math">482.0 \pm 12.4 \text{ ms}</span> (<span class="math">\approx 2600\%</span> overhead)</p>
+<ul>
+<li><strong>Architectural Rationale for Low Overhead:</strong></li>
+</ul>
+<p>  - Avoids all heap allocations in intercepted paths.</p>
+<p>  - Fast-path probing via <code>trylock</code> minimizes contention logging overhead.</p>
+<p>  - Cycle detection algorithms run asynchronously in the background Watchdog daemon, offloading graph analysis from application worker threads.</p>
+<hr/>
+<h2>Chapter 10: Limitations, Threats to Validity, and Future Work</h2>
+<h3>10.1 Technical Limitations Grounded in Code</h3>
+<p>Detail the actual architectural boundaries of the current implementation:</p>
+<ol>
+<li><strong>Fixed Static Array Limits:</strong></li>
+</ol>
+<p>   - Maximum 64 threads (<code>MAX_THREADS</code>), 512 mutexes (<code>MAX_LOCKS</code>), 16 simultaneously held locks (<code>MAX_HELD_LOCKS</code>), and 1024 edges (<code>MAX_EDGES</code>).</p>
+<p>   - If an application spawns more than 64 threads or dynamically allocates thousands of short-lived mutexes, DeadlockScope clamps or rejects registrations.</p>
+<ol>
+<li><strong>Unsupported Synchronization Primitives:</strong></li>
+</ol>
+<p>   - Reader-writer locks (<code>pthread_rwlock_t</code>), counting semaphores (<code>sem_t</code>), and condition variables with multi-mutex predicates are not tracked by the lock graph.</p>
+<ol>
+<li><strong>Bounded DFS Search Depth:</strong></li>
+</ol>
+<p>   - The DFS cycle finder in <code>src/lock_graph.c</code> terminates at depth 8 (<code>MAX_CYCLE_DEPTH</code>). Cycles involving 9 or more distinct locks will not be discovered.</p>
+<ol>
+<li><strong>Single-Process Limitation:</strong></li>
+</ol>
+<p>   - Inter-process shared memory mutexes (<code>PTHREAD_PROCESS_SHARED</code>) mapped via <code>mmap()</code> across distinct process address spaces are not tracked.</p>
+<h3>10.2 Threats to Validity</h3>
+<ul>
+<li><strong>Internal Validity:</strong> Microsecond delay injection (<code>--stress</code>) alters thread timing, which could theoretically mask certain race conditions while provoking others.</li>
+<li><strong>External Validity:</strong> Benchmarks were conducted on synthetic multi-threaded patterns. While these patterns model real-world concurrency bugs, evaluating large real-world codebases (e.g., MySQL, Apache HTTP Server, Redis) represents an area for future work <code><span class="badge-required">[DATA REQUIRED: Industrial application case studies]</span></code>.</li>
+</ul>
+<h3>10.3 Future Research and Engineering Directions</h3>
+<ol>
+<li><strong>Lock-Free Dynamic Hash Tables:</strong> Replace static arrays with dynamically resizable hazard-pointer or RCU-protected hash tables to support arbitrary thread and lock counts.</li>
+<li><strong>Reader-Writer Lock Support:</strong> Extend graph modeling to handle shared-read vs. exclusive-write semantics.</li>
+<li><strong>Kernel eBPF Integration:</strong> Implement kernel uprobes and tracepoints via eBPF to monitor POSIX synchronization with near-zero overhead.</li>
+<li><strong>Automated Deadlock Recovery:</strong> Extend the Watchdog to support active recovery policies, such as sending <code>pthread_cancel</code> or injecting <code>EDEADLK</code> return codes to break detected cycles without crashing the process.</li>
+</ol>
+<hr/>
+<h2>Chapter 11: Conclusion and Summary</h2>
+<h3>11.1 Summary of Completed Work</h3>
+<ul>
+<li>Designed and implemented <strong>DeadlockScope</strong>, a non-invasive runtime dynamic analysis and provocation tool for POSIX threads in C on Linux x86_64.</li>
+<li>Implemented transparent library interposition via <code>LD_PRELOAD</code>, intercepting mutex, condition variable, and thread lifecycle routines without recompilation.</li>
+<li>Decoupled predictive lock-order tracking (<span class="math">\mathcal{G}_{LO}</span>) from real-time blocked thread states (<span class="math">\mathcal{G}_{WF}</span>), introducing a comprehensive state taxonomy (<code>POTENTIAL</code>, <code>SUPPRESSED</code>, <code>ACTIVE</code>, <code>ACTIVE_TIMED</code>, <code>CONFIRMED</code>).</li>
+<li>Developed, mathematically proved, and implemented three credibility filters (Same-Thread, Gate-Lock, Lifecycle Barrier) that eliminate false alarms on benign synchronization idioms.</li>
+<li>Implemented an autonomous background Watchdog daemon with two-tick stability hysteresis to diagnose frozen processes in real time.</li>
+<li>Implemented a closed-loop provocation engine that injects targeted microsecond delays to turn latent race conditions into confirmed deadlocks.</li>
+</ul>
+<h3>11.2 Key Takeaways and Concluding Remarks</h3>
+<p>DeadlockScope demonstrates that runtime concurrency analysis does not have to choose between false-positive fatigue and high overhead. By pairing predictive graph analysis with formal credibility heuristics and active provocation, DeadlockScope provides a practical, high-precision debugging tool for concurrent systems software.</p>
+<hr/>
+<h2>Academic References (Verified Literature)</h2>
+<p>Provide complete, verified academic citations. Do not fabricate citations or DOIs:</p>
+<ol>
+<li><strong>Coffman, E. G., Elphick, M., &amp; Shoshani, A.</strong> (1971). <em>System Deadlocks</em>. ACM Computing Surveys (CSUR), 3(2), 67–78. <code>[Foundational 4 Coffman conditions]</code></li>
+<li><strong>Lamport, L.</strong> (1978). <em>Time, Clocks, and the Ordering of Events in a Distributed System</em>. Communications of the ACM, 21(7), 558–565. <code>[Happens-before relation formulation]</code></li>
+<li><strong>Bensalem, S., &amp; Havelund, K.</strong> (2005). <em>Dynamic Deadlock Analysis of Multi-threaded Programs</em>. In Hardware and Software, Verification and Testing (HVC 2005), Lecture Notes in Computer Science (LNCS 3875), pp. 208–223. Springer. <code>[The GoodLock algorithm]</code></li>
+<li><strong>Molnar, I.</strong> (2006). <em>Runtime Locking Correctness Validator (lockdep)</em>. Linux Kernel Documentation, <code>Documentation/locking/lockdep-design.rst</code>. <code>[Linux Kernel lockdep design]</code></li>
+<li><strong>Nethercote, N., &amp; Seward, J.</strong> (2007). <em>Valgrind: A Framework for Heavyweight Dynamic Binary Instrumentation</em>. In Proceedings of the ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI &#x27;07), pp. 89–100. <code>[Valgrind &amp; Helgrind architecture]</code></li>
+<li><strong>Serebryany, K., &amp; Iskhodzhanov, T.</strong> (2009). <em>ThreadSanitizer: Data Race Detection in Practice</em>. In Proceedings of the Workshop on Binary Instrumentation and Applications (WBIA &#x27;09), pp. 62–71. ACM. <code>[LLVM ThreadSanitizer]</code></li>
+<li><strong>Joshi, P., Park, C., Sen, K., &amp; Naik, M.</strong> (2009). <em>A Randomized Dynamic Program Analysis Technique for Detecting Real Deadlocks</em>. In Proceedings of the ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI &#x27;09), pp. 110–120. <code>[DeadlockFuzz &amp; active perturbation]</code></li>
+<li><strong>Burckhardt, S., Kothari, P., Musuvathi, M., &amp; Nagarakatte, S.</strong> (2010). <em>A Randomized Scheduler with Probabilistic Guarantees of Finding Bugs</em>. In Proceedings of the International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS &#x27;10), pp. 167–178. <code>[PCT Concurrency Testing]</code></li>
+<li><strong>IEEE / The Open Group.</strong> (2018). <em>Standard for Information Technology—Portable Operating System Interface (POSIX®) Base Specifications, Issue 7</em>. IEEE Std 1003.1-2017. <code>[POSIX threads and mutex specifications]</code></li>
+<li><strong>Tarjan, R.</strong> (1972). <em>Depth-First Search and Linear Graph Algorithms</em>. SIAM Journal on Computing, 1(2), 146–160. <code>[DFS and graph cycle algorithms]</code></li>
+</ol>
+<hr/>
+<h2>Appendices</h2>
+<h3>Appendix A: DeadlockScope CLI Manual and Environment Variables</h3>
+<ul>
+<li><strong>Usage Syntax:</strong></li>
+</ul>
+<p>  <code>`</code>bash</p>
+<p>  deadlock-scope [--stress [ms]] [--filters &lt;list&gt;] [--poll &lt;ms&gt;] [--confirm &lt;ms&gt;] [--dot &lt;file&gt;] [--html &lt;file&gt;] [--debug] -- &lt;program&gt; [args...]</p>
+<p>  <code>`</code></p>
+<ul>
+<li><strong>Environment Variables:</strong></li>
+</ul>
+<p>  - <code>DEADLOCKSCOPE_STRESS</code>: Delay in milliseconds injected on target locks (default: 5 ms if enabled).</p>
+<p>  - <code>DEADLOCKSCOPE_FILTERS</code>: Filter configuration string (<code>all</code>, <code>none</code>, or combinations of <code>thread</code>, <code>gate</code>, <code>lifecycle</code>).</p>
+<p>  - <code>DEADLOCKSCOPE_POLL_MS</code>: Watchdog polling interval in milliseconds (default: 50 ms).</p>
+<p>  - <code>DEADLOCKSCOPE_CONFIRM_MS</code>: Watchdog hysteresis confirmation threshold in milliseconds (default: 100 ms).</p>
+<p>  - <code>DEADLOCKSCOPE_DEBUG</code>: Enables verbose debug messages on suppressed candidate cycles.</p>
+<p>  - <code>DEADLOCKSCOPE_DOT</code>: Output filepath for Graphviz <code>.dot</code> export.</p>
+<p>  - <code>DEADLOCKSCOPE_HTML</code>: Output filepath for standalone interactive HTML dashboard.</p>
+<h3>Appendix B: Core C Header Data Structures (<code>include/ds_common.h</code>)</h3>
+<p>Include key struct definitions (<code>HeldLockSet</code>, <code>ThreadSlot</code>, <code>Witness</code>, <code>LockOrderEdge</code>, <code>Cycle</code>, <code>Finding</code>, <code>DSConfig</code>) from lines 27–120 of <code>include/ds_common.h</code> as a formal reference for report readers.</p>
+<h3>Appendix C: Graphviz DOT Grammar and Visualization Specification</h3>
+<p>Detail the dual-cluster DOT format emitted by <code>ds_report_export_dot()</code> in <code>src/report.c</code>:</p>
+<ul>
+<li>Cluster 1: <code>cluster_lock_order</code> containing box-shaped mutex nodes and directed acquisition edges. Edge color indicates status (black: unconflicted, orange: <code>POTENTIAL</code>, red: <code>CONFIRMED</code>).</li>
+<li>Cluster 2: <code>cluster_wait_for</code> containing thread nodes and active wait-for dependencies with waiting lock labels.</li>
+</ul>
+<h3>Appendix D: Standalone Interactive HTML Dashboard Architecture</h3>
+<p>Document the HTML generation implementation in <code>src/report.c</code> (lines 243–1397):</p>
+<ul>
+<li>Zero external dependencies: requires no internet connection, external CSS, or JavaScript CDNs.</li>
+<li>Client-side Canvas force-directed graph renderer with draggable nodes, spring simulation, and quadratic bezier curves for bidirectional thread wait edges.</li>
+<li>Executive verdict hero banners (Crimson for confirmed deadlocks, Emerald for clean runs, Purple for timed stalls).</li>
+<li>Interactive client-side filter ablation toggles allowing reviewers to inspect how the graph behaves with and without credibility filters.</li>
+</ul>
+<hr/>
+<h2>Final Instructions to the Report Generator LLM</h2>
+<p>When writing the final formal report using this blueprint:</p>
+<ol>
+<li><strong>Target Length:</strong> Expand each chapter thoroughly to achieve a final report length of <strong>20–25 pages</strong> (approximately 8,000–11,000 words).</li>
+<li><strong>Formatting Standards:</strong> Use clear headings, formal academic prose, numbered equations for mathematical proofs, structured tables for empirical data, and formatted code snippets for algorithmic implementations.</li>
+<li><strong>Academic Integrity:</strong> Adhere strictly to the <code>[DATA REQUIRED]</code> placeholders for institution-specific information, and use the provided verified references.</li>
+<li><strong>Tone:</strong> Maintain an authoritative, rigorous, systems-engineering tone throughout the report.</li>
+</ol>
+</body>
+</html>
